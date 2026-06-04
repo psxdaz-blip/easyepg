@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import Header from "@/components/Header";
+import NewCategoryModal from "@/components/NewCategoryModal";
 import MasterPlaylistView from "@/components/MasterPlaylistView";
 import PersonalPlaylistView from "@/components/PersonalPlaylistView";
 import {
@@ -15,10 +16,21 @@ type ViewMode = "master" | "personal";
 export default function PlaylistPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("personal");
   const [toast, setToast] = useState<string | null>(null);
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [customCategories, setCustomCategories] = useState<string[]>([]);
 
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 4000);
+  };
+
+  const handleNewPlaylist = () => {
+    showToast("✅ New playlist created — add channels from the Master list");
+  };
+
+  const handleNewCategory = (name: string) => {
+    setCustomCategories((prev) => [...prev, name]);
+    showToast(`✅ Category "${name}" created`);
   };
 
   const handleCopyFromMaster = (
@@ -39,39 +51,52 @@ export default function PlaylistPage() {
     showToast(`"${ch?.name ?? "Channel"}" removed`);
   };
 
+  // Merge mock categories with custom ones for the filter rail
+  const allChannels = [
+    ...mockMasterChannels,
+    ...(customCategories.length > 0
+      ? customCategories.map((cat, i) => ({
+          id: `custom-cat-${i}`,
+          name: cat,
+          groupTitle: cat,
+          streamUrl: "",
+          nextProgram: null,
+        }))
+      : []),
+  ] as typeof mockMasterChannels;
+
   return (
     <main className="min-h-screen bg-white">
-      {/* Top navigation */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-[#E5E7EB]">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/dashboard"
-            className="btn btn--ghost"
-            aria-label="Back to dashboard"
-          >
-            ← Back
-          </Link>
-          <span className="text-[22px] font-bold text-[#1A1A1A]">
-            My Playlist
+      <Header
+        title="My Playlist"
+        showBack
+        backHref="/dashboard"
+        onNewPlaylist={handleNewPlaylist}
+        onNewCategory={() => setCategoryModalOpen(true)}
+      />
+
+      {/* View toggle */}
+      <div className="flex gap-2 px-6 py-3 border-b border-[#E5E7EB]">
+        <button
+          className={`btn ${viewMode === "master" ? "btn--primary" : "btn--ai"}`}
+          onClick={() => setViewMode("master")}
+          aria-label="View Master Playlist"
+        >
+          Master ({mockMasterChannels.length})
+        </button>
+        <button
+          className={`btn ${viewMode === "personal" ? "btn--primary" : "btn--ai"}`}
+          onClick={() => setViewMode("personal")}
+          aria-label="View My Playlist"
+        >
+          My List ({mockMyChannels.length})
+        </button>
+        {customCategories.length > 0 && (
+          <span className="text-[14px] text-[#16A34A] self-center ml-2 font-medium">
+            +{customCategories.length} custom
           </span>
-        </div>
-        <div className="flex gap-2">
-          <button
-            className={`btn ${viewMode === "master" ? "btn--primary" : "btn--ai"}`}
-            onClick={() => setViewMode("master")}
-            aria-label="View Master Playlist"
-          >
-            Master ({mockMasterChannels.length})
-          </button>
-          <button
-            className={`btn ${viewMode === "personal" ? "btn--primary" : "btn--ai"}`}
-            onClick={() => setViewMode("personal")}
-            aria-label="View My Playlist"
-          >
-            My List ({mockMyChannels.length})
-          </button>
-        </div>
-      </header>
+        )}
+      </div>
 
       {/* Content */}
       {viewMode === "master" ? (
@@ -116,6 +141,12 @@ export default function PlaylistPage() {
           </button>
         </div>
       )}
+
+      <NewCategoryModal
+        open={categoryModalOpen}
+        onClose={() => setCategoryModalOpen(false)}
+        onCreate={handleNewCategory}
+      />
 
       <style>{`
         @keyframes slide-up {
