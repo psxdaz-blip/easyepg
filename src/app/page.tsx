@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function LandingPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
 
@@ -23,6 +25,7 @@ export default function LandingPage() {
       });
       if (!res.ok) throw new Error("Failed to send");
       setSent(true);
+      setTimeout(() => router.push(`/verify?email=${encodeURIComponent(email)}`), 1200);
     } catch {
       setError("Something went wrong. Try again.");
     } finally {
