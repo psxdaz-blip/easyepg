@@ -1,0 +1,17 @@
+# workers/logo-cdn/wrangler.toml
+name = "logo-cdn"
+main = "index.ts"
+compatibility_date = "2025-12-01"
+
+# Route — CDN subdomain
+routes = [
+  { pattern = "cdn.easyepg.tv/*", zone_id = "${CF_ZONE_ID}" },
+]
+
+# R2 bucket binding
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "easyepg-logos"
+
+[vars]
+ENVIRONMENT = "production"

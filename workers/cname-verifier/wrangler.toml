@@ -1,0 +1,22 @@
+# workers/cname-verifier/wrangler.toml
+name = "cname-verifier"
+main = "index.ts"
+compatibility_date = "2025-12-01"
+
+# Cron trigger — runs every 60 seconds
+[triggers]
+crons = ["* * * * *"]
+
+# D1 binding
+[[d1_databases]]
+binding = "DB"
+database_name = "easyepg-db"
+database_id = ""
+
+# Routes — internal verification endpoint
+routes = [
+  { pattern = "verify.easyepg.tv/*", zone_id = "${CF_ZONE_ID}" },
+]
+
+[vars]
+ENVIRONMENT = "production"
