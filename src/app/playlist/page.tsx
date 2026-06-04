@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Header from "@/components/Header";
 import NewCategoryModal from "@/components/NewCategoryModal";
+import AssignCategoryModal from "@/components/AssignCategoryModal";
+import CopyCategoriesModal from "@/components/CopyCategoriesModal";
 import MasterPlaylistView from "@/components/MasterPlaylistView";
 import PersonalPlaylistView from "@/components/PersonalPlaylistView";
 import {
@@ -17,7 +19,17 @@ export default function PlaylistPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("personal");
   const [toast, setToast] = useState<string | null>(null);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [copyCategoriesModalOpen, setCopyCategoriesModalOpen] = useState(false);
+  const [pendingAssignIds, setPendingAssignIds] = useState<string[]>([]);
   const [customCategories, setCustomCategories] = useState<string[]>([]);
+
+  const allCategories = useMemo(() => {
+    const cats = new Set<string>();
+    mockMasterChannels.forEach((c) => { if (c.groupTitle) cats.add(c.groupTitle); });
+    customCategories.forEach((c) => cats.add(c));
+    return Array.from(cats).sort();
+  }, [customCategories]);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -31,6 +43,20 @@ export default function PlaylistPage() {
   const handleNewCategory = (name: string) => {
     setCustomCategories((prev) => [...prev, name]);
     showToast(`✅ Category "${name}" created`);
+  };
+
+  const handleAssignCategory = (category: string, channelIds: string[]) => {
+    setPendingAssignIds(channelIds);
+    setAssignModalOpen(true);
+  };
+
+  const handleCategoryAssigned = (category: string, channelIds: string[]) => {
+    showToast(`✅ ${channelIds.length} channels assigned to "${category}"`);
+  };
+
+  const handleCopyByCategory = (categories: string[]) => {
+    const count = mockMasterChannels.filter((c) => c.groupTitle && categories.includes(c.groupTitle)).length;
+    showToast(`✅ ${count} channels copied from ${categories.length} categor${categories.length > 1 ? "ies" : "y"}`);
   };
 
   const handleCopyFromMaster = (
@@ -109,6 +135,8 @@ export default function PlaylistPage() {
           onCopyToMyPlaylist={(ids) => {
             handleCopyFromMaster("all");
           }}
+          onAssignCategory={(cat, ids) => handleAssignCategory(cat, ids)}
+          onAddCategoriesToPlaylist={() => setCopyCategoriesModalOpen(true)}
         />
       ) : (
         <PersonalPlaylistView
@@ -146,6 +174,22 @@ export default function PlaylistPage() {
         open={categoryModalOpen}
         onClose={() => setCategoryModalOpen(false)}
         onCreate={handleNewCategory}
+      />
+
+      <AssignCategoryModal
+        open={assignModalOpen}
+        onClose={() => setAssignModalOpen(false)}
+        categories={allCategories}
+        selectedChannelCount={pendingAssignIds.length}
+        selectedChannelIds={pendingAssignIds}
+        onAssign={handleCategoryAssigned}
+      />
+
+      <CopyCategoriesModal
+        open={copyCategoriesModalOpen}
+        onClose={() => setCopyCategoriesModalOpen(false)}
+        categories={allCategories}
+        onCopy={handleCopyByCategory}
       />
 
       <style>{`

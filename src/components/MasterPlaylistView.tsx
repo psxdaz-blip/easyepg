@@ -12,6 +12,10 @@ export interface MasterPlaylistViewProps {
   onShowAiSuggestions: () => void;
   onCategorySelect?: (categories: string[]) => void;
   onCopyToMyPlaylist?: (channelIds: string[]) => void;
+  /** Assign selected channels to a category */
+  onAssignCategory?: (category: string, channelIds: string[]) => void;
+  /** User wants to add categories to their playlist */
+  onAddCategoriesToPlaylist?: () => void;
   /** Mock AI confidence map: channelId → { confidence, autoApplied } */
   aiConfidenceMap?: Record<string, { confidence: number; autoApplied: boolean }>;
 }
@@ -54,6 +58,8 @@ const MasterPlaylistView: React.FC<MasterPlaylistViewProps> = ({
   onShowAiSuggestions,
   onCategorySelect,
   onCopyToMyPlaylist,
+  onAssignCategory,
+  onAddCategoriesToPlaylist,
   aiConfidenceMap,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>(ALL_CATEGORIES);
@@ -79,8 +85,12 @@ const MasterPlaylistView: React.FC<MasterPlaylistViewProps> = ({
   };
 
   const handleSelectAllInView = () => {
-    const ids = filteredChannels.map((c) => c.id);
-    setSelectedIds(new Set(ids));
+    if (selectedIds.size === filteredChannels.length) {
+      setSelectedIds(new Set());
+    } else {
+      const ids = filteredChannels.map((c) => c.id);
+      setSelectedIds(new Set(ids));
+    }
   };
 
   return (
@@ -125,9 +135,32 @@ const MasterPlaylistView: React.FC<MasterPlaylistViewProps> = ({
             ? `${selectedIds.size} of ${filteredChannels.length} selected`
             : `${filteredChannels.length} channels`}
         </span>
-        <button className="btn btn--ghost" onClick={handleSelectAllInView} aria-label="Select all visible channels">
-          Select all
-        </button>
+        <div className="master-playlist__selection-actions">
+          <button className="btn btn--ghost" onClick={handleSelectAllInView} aria-label="Select all visible channels">
+            {selectedIds.size === filteredChannels.length ? "Deselect all" : "Select all"}
+          </button>
+          {selectedIds.size > 0 && (
+            <>
+              <button
+                className="btn btn--secondary master-playlist__action-btn"
+                onClick={() => onAssignCategory?.("", Array.from(selectedIds))}
+                aria-label="Assign selected channels to a category"
+              >
+                + Category
+              </button>
+              <button
+                className="btn btn--primary master-playlist__action-btn"
+                onClick={() => {
+                  onCopyToMyPlaylist?.(Array.from(selectedIds));
+                  setSelectedIds(new Set());
+                }}
+                aria-label={`Copy ${selectedIds.size} selected to my playlist`}
+              >
+                Copy
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* ─── Channel List ─── */}
@@ -148,7 +181,7 @@ const MasterPlaylistView: React.FC<MasterPlaylistViewProps> = ({
         )}
       </div>
 
-      {/* ─── Sticky bottom: Copy selected ─── */}
+      {/* ─── Sticky bottom ─── */}
       {selectedIds.size > 0 && (
         <div className="master-playlist__sticky-bottom">
           <button
@@ -157,6 +190,17 @@ const MasterPlaylistView: React.FC<MasterPlaylistViewProps> = ({
             aria-label={`Copy ${selectedIds.size} selected channels to my playlist`}
           >
             Copy {selectedIds.size} Selected →
+          </button>
+        </div>
+      )}
+      {selectedIds.size === 0 && onAddCategoriesToPlaylist && (
+        <div className="master-playlist__sticky-bottom">
+          <button
+            className="btn btn--ai btn--full"
+            onClick={onAddCategoriesToPlaylist}
+            aria-label="Add categories to my playlist"
+          >
+            + Add Categories to Playlist
           </button>
         </div>
       )}
@@ -202,6 +246,18 @@ const MasterPlaylistView: React.FC<MasterPlaylistViewProps> = ({
           justify-content: space-between;
           align-items: center;
           margin-bottom: var(--space-sm, 12px);
+          flex-wrap: wrap;
+          gap: var(--space-xs, 8px);
+        }
+        .master-playlist__selection-actions {
+          display: flex;
+          gap: var(--space-xs, 8px);
+          align-items: center;
+        }
+        .master-playlist__action-btn {
+          min-height: 44px;
+          padding: 0 16px;
+          font-size: 14px;
         }
         .master-playlist__selection-count {
           font-size: var(--font-small, 14px);
