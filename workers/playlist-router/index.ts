@@ -55,16 +55,27 @@ export default {
       //   ORDER BY pc.channel_number ASC
       // `).bind(slug).all();
 
-      // Placeholder M3U while DB is being set up
+      // Placeholder M3U matching real playlist format
       const m3u = `#EXTM3U
 # EasyEPG — ${slug}
 # Deployed: ${new Date().toISOString()}
 
-#EXTINF:-1 tvg-id="hbo.us" tvg-name="HBO" tvg-logo="https://cdn.easyepg.tv/logos/hbo.png" group-title="Entertainment",HBO
-https://example.com/hbo.m3u8
-
-#EXTINF:-1 tvg-id="espn.us" tvg-name="ESPN" tvg-logo="https://cdn.easyepg.tv/logos/espn.png" group-title="Sports",ESPN
-https://example.com/espn.m3u8
+#EXTINF:-1 tvg-id="bbc1.uk" tvg-name="BBC 1 HEVC HD" tvg-logo="https://logo.m3uassets.com/bbc1.png" group-title="GENERAL ʰᵉᵛᶜ",BBC 1 HEVC HD
+http://pro.ukglobal.store/live/fcfae39ab4/adbb05ede5/852146.ts
+#EXTINF:-1 tvg-id="bbc2.uk" tvg-name="BBC 2 HEVC HD" tvg-logo="https://logo.m3uassets.com/bbc2.png" group-title="GENERAL ʰᵉᵛᶜ",BBC 2 HEVC HD
+http://pro.ukglobal.store/live/fcfae39ab4/adbb05ede5/852145.ts
+#EXTINF:-1 tvg-id="itv1.uk" tvg-name="ITV 1 HEVC HD" tvg-logo="https://logo.m3uassets.com/itv1.png" group-title="GENERAL ʰᵉᵛᶜ",ITV 1 HEVC HD
+http://pro.ukglobal.store/live/fcfae39ab4/adbb05ede5/852144.ts
+#EXTINF:-1 tvg-id="channel4.uk" tvg-name="CHANNEL 4 HEVC HD" tvg-logo="https://logo.m3uassets.com/channel4.png" group-title="GENERAL ʰᵉᵛᶜ",CHANNEL 4 HEVC HD
+http://pro.ukglobal.store/live/fcfae39ab4/adbb05ede5/852142.ts
+#EXTINF:-1 tvg-id="skynews.uk" tvg-name="SKY NEWS HEVC HD" tvg-logo="https://logo.m3uassets.com/skynews.png" group-title="GENERAL ʰᵉᵛᶜ",SKY NEWS HEVC HD
+http://pro.ukglobal.store/live/fcfae39ab4/adbb05ede5/852133.ts
+#EXTINF:-1 tvg-id="skysportsfootball.uk" tvg-name="SKY SPORTS FOOTBALL ᴴᴰ ◉" tvg-logo="https://logo.m3uassets.com/skysportsfootball.png" group-title="SPORT ᴴᴰ",SKY SPORTS FOOTBALL ᴴᴰ ◉
+http://pro.ukglobal.store/live/fcfae39ab4/adbb05ede5/852125.ts
+#EXTINF:-1 tvg-id="skysportscricket.uk" tvg-name="SKY SPORTS CRICKET HD" tvg-logo="https://logo.m3uassets.com/skysportscricket.png" group-title="WORLD CRICKET",SKY SPORTS CRICKET HD
+http://pro.ukglobal.store/live/fcfae39ab4/adbb05ede5/852117.ts
+#EXTINF:-1 tvg-id="willowcricket.in" tvg-name="US: WILLOW CRICKET" tvg-logo="https://logo.m3uassets.com/willowcricket.png" group-title="WORLD CRICKET",US: WILLOW CRICKET
+http://pro.ukglobal.store/live/fcfae39ab4/adbb05ede5/852116.ts
 `;
 
       return new Response(m3u, {

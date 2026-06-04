@@ -7,7 +7,15 @@ import React, { useState, useId } from 'react';
 export interface Channel {
   id: string;
   name: string;
+  /** Display name used in EPG / M3U tvg-name */
+  tvgName?: string;
+  /** EPG identifier (e.g. "bbc1.uk", "skysportsfootball.uk") */
+  tvgId?: string;
+  /** Logo URL from CDN or M3U provider */
   logoUrl?: string;
+  /** M3U group-title (category) */
+  groupTitle?: string;
+  /** Backwards-compatible alias */
   group?: string;
   language?: string;
   nextProgram?: { title: string; startTime: string } | null;
@@ -131,8 +139,8 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
             Next: {formatTime(channel.nextProgram.startTime)} – {channel.nextProgram.title}
           </p>
         )}
-        {channel.group && (
-          <p className="channel-card__group">{channel.group}</p>
+        {channel.groupTitle && (
+          <p className="channel-card__group">{channel.groupTitle}</p>
         )}
       </div>
 

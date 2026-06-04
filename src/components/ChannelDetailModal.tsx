@@ -114,8 +114,8 @@ const ChannelDetailModal: React.FC<ChannelDetailModalProps> = ({
         {/* Channel name + meta */}
         <h1 className="modal-channel-name">{channel.name}</h1>
         <p className="modal-channel-meta">
-          {channel.group && <span>{channel.group}</span>}
-          {channel.group && channel.language && <span> · </span>}
+          {channel.groupTitle && <span>{channel.groupTitle}</span>}
+          {channel.groupTitle && channel.language && <span> · </span>}
           {channel.language && (
             <span>{channel.language.toUpperCase()}</span>
           )}

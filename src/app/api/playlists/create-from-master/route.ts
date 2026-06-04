@@ -33,7 +33,7 @@ export async function POST(request: Request) {
         .map((c) => c.id);
     } else if (mode === "category" && body.categories?.length) {
       channelIds = mockMasterChannels
-        .filter((c) => body.categories.includes(c.group))
+        .filter((c) => body.categories.includes(c.groupTitle))
         .map((c) => c.id);
     } else {
       // "all" — copy all

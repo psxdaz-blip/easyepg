@@ -23,7 +23,7 @@ const ALL_CATEGORIES = 'All';
 /** Extract unique groups from channels, sorted */
 const extractCategories = (channels: Channel[]): string[] => {
   const groups = new Set<string>();
-  channels.forEach((c) => { if (c.group) groups.add(c.group); });
+  channels.forEach((c) => { if (c.groupTitle || c.group) groups.add(c.groupTitle || c.group!); });
   return [ALL_CATEGORIES, ...Array.from(groups).sort()];
 };
 
@@ -63,7 +63,7 @@ const MasterPlaylistView: React.FC<MasterPlaylistViewProps> = ({
 
   const filteredChannels = useMemo(() => {
     if (selectedCategory === ALL_CATEGORIES) return channels;
-    return channels.filter((c) => c.group === selectedCategory);
+    return channels.filter((c) => (c.groupTitle || c.group) === selectedCategory);
   }, [channels, selectedCategory]);
 
   const handleCategorySelect = (label: string) => {
