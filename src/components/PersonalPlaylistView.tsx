@@ -3,6 +3,19 @@
 import React, { useState, useCallback, useRef } from 'react';
 import ChannelCard, { type Channel } from './ChannelCard';
 
+/* ─── Helpers ─── */
+
+/** Group channels by groupTitle, preserving order */
+function groupByCategory(chs: Channel[]): Map<string, Channel[]> {
+  const map = new Map<string, Channel[]>();
+  for (const ch of chs) {
+    const key = ch.groupTitle || ch.group || "Uncategorised";
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(ch);
+  }
+  return map;
+}
+
 /* ─── Types ─── */
 
 export type CopyMode = 'all' | 'category' | 'smart';
@@ -116,7 +129,11 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
   const myCount = myChannels.length;
   const selectedCount = selectedMasterIds.size;
 
-  const pane = (title: string, chs: Channel[], count: number, side: 'master' | 'mine') => (
+  const pane = (title: string, chs: Channel[], count: number, side: 'master' | 'mine') => {
+    // Group "mine" channels by category
+    const grouped = side === 'mine' ? groupByCategory(chs) : null;
+
+    return (
     <div className={`two-pane__pane two-pane__pane--${side}`}>
       <h2 className="two-pane__pane-title">
         {title}
@@ -126,20 +143,41 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
         )}
       </h2>
       <div className="two-pane__pane-list" role="list" aria-label={`${title} channels`}>
-        {chs.map((ch, i) => (
-          <ChannelCard
-            key={ch.id}
-            channel={ch}
-            aiConfidence={aiConfidenceMap?.[ch.id]?.confidence}
-            aiAutoApplied={aiConfidenceMap?.[ch.id]?.autoApplied}
-            inMyPlaylist={side === 'mine'}
-            selectable={side === 'master'}
-            selected={side === 'master' ? selectedMasterIds.has(ch.id) : false}
-            onSelect={side === 'master' ? handleSelectMaster : undefined}
-            onToggle={onToggleChannel}
-            onMenuOpen={(id) => console.log('Menu open:', id)}
-          />
-        ))}
+        {side === 'mine' && grouped ? (
+          // Render with category headers
+          Array.from(grouped.entries()).map(([cat, catChs]) => (
+            <div key={cat} className="two-pane__cat-group">
+              <div className="two-pane__cat-header">{cat}</div>
+              {catChs.map((ch) => (
+                <ChannelCard
+                  key={ch.id}
+                  channel={ch}
+                  aiConfidence={aiConfidenceMap?.[ch.id]?.confidence}
+                  aiAutoApplied={aiConfidenceMap?.[ch.id]?.autoApplied}
+                  inMyPlaylist={true}
+                  onToggle={onToggleChannel}
+                  onMenuOpen={(id) => console.log('Menu open:', id)}
+                />
+              ))}
+            </div>
+          ))
+        ) : (
+          // Flat list for master
+          chs.map((ch, i) => (
+            <ChannelCard
+              key={ch.id}
+              channel={ch}
+              aiConfidence={aiConfidenceMap?.[ch.id]?.confidence}
+              aiAutoApplied={aiConfidenceMap?.[ch.id]?.autoApplied}
+              inMyPlaylist={side === 'mine'}
+              selectable={side === 'master'}
+              selected={side === 'master' ? selectedMasterIds.has(ch.id) : false}
+              onSelect={side === 'master' ? handleSelectMaster : undefined}
+              onToggle={onToggleChannel}
+              onMenuOpen={(id) => console.log('Menu open:', id)}
+            />
+          ))
+        )}
         {chs.length === 0 && (
           <p className="two-pane__empty">
             {side === 'master' ? 'No channels available.' : 'Your playlist is empty. Add channels from the Master list.'}
@@ -172,6 +210,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
       </div>
     </div>
   );
+  };
 
   /* ─── Mobile: Single column with bottom‑sheet modal ─── */
   if (isMobile) {
@@ -334,6 +373,21 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
           padding: var(--space-xl, 32px);
           color: var(--text-muted, #9AA0A6);
           font-size: var(--font-base, 16px);
+        }
+        /* ─── Category grouping ─── */
+        .two-pane__cat-group {
+          margin-bottom: var(--space-xs, 8px);
+        }
+        .two-pane__cat-header {
+          font-size: var(--font-small, 14px);
+          font-weight: 600;
+          color: var(--accent, #2563EB);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          padding: var(--space-xs, 8px) var(--space-sm, 12px) var(--space-xs, 8px);
+          background: var(--accent-soft, #EFF6FF);
+          border-radius: 8px 8px 0 0;
+          margin-bottom: 2px;
         }
         .two-pane__sticky-add,
         .two-pane__sticky-copy {
