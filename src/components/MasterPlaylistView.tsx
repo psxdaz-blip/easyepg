@@ -206,7 +206,7 @@ const MasterPlaylistView: React.FC<MasterPlaylistViewProps> = ({
       )}
 
       {/* ─── Styles ─── */}
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .master-playlist {
           background: var(--bg, #FFFFFF);
           padding: var(--space-lg, 24px) var(--page-gutter, 24px);
@@ -358,7 +358,7 @@ const MasterPlaylistView: React.FC<MasterPlaylistViewProps> = ({
           outline: 3px solid var(--focus-ring, #2563EB);
           outline-offset: 2px;
         }
-      `}</style>
+      ` }} />
     </section>
   );
 };

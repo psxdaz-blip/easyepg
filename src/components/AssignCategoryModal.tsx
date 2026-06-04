@@ -89,7 +89,7 @@ const AssignCategoryModal: React.FC<AssignCategoryModalProps> = ({
         </div>
       </div>
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .acm-overlay {
           position: fixed; inset: 0; background: rgba(0,0,0,0.35);
           display: flex; align-items: center; justify-content: center;
@@ -141,7 +141,7 @@ const AssignCategoryModal: React.FC<AssignCategoryModalProps> = ({
           text-align: center; color: var(--text-muted, #9AA0A6); padding: 24px;
         }
         .acm-actions { display: flex; gap: 12px; justify-content: flex-end; }
-      `}</style>
+      ` }} />
     </div>
   );
 };

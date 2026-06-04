@@ -91,7 +91,7 @@ const NewCategoryModal: React.FC<NewCategoryModalProps> = ({
         </div>
       </div>
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .ncm-overlay {
           position: fixed;
           inset: 0;
@@ -167,7 +167,7 @@ const NewCategoryModal: React.FC<NewCategoryModalProps> = ({
           gap: var(--space-sm, 12px);
           justify-content: flex-end;
         }
-      `}</style>
+      ` }} />
     </div>
   );
 };

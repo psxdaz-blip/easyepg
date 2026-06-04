@@ -97,7 +97,7 @@ const CopyCategoriesModal: React.FC<CopyCategoriesModalProps> = ({
         </div>
       </div>
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .ccm-overlay {
           position: fixed; inset: 0; background: rgba(0,0,0,0.35);
           display: flex; align-items: center; justify-content: center;
@@ -164,7 +164,7 @@ const CopyCategoriesModal: React.FC<CopyCategoriesModalProps> = ({
           text-align: center; color: var(--text-muted, #9AA0A6); padding: 24px;
         }
         .ccm-actions { display: flex; gap: 12px; justify-content: flex-end; }
-      `}</style>
+      ` }} />
     </div>
   );
 };

@@ -193,7 +193,7 @@ const ChannelDetailModal: React.FC<ChannelDetailModalProps> = ({
         )}
 
         {/* ─── Styles ─── */}
-        <style>{`
+        <style dangerouslySetInnerHTML={{ __html: `
           .modal-overlay {
             position: fixed;
             inset: 0;
@@ -331,7 +331,7 @@ const ChannelDetailModal: React.FC<ChannelDetailModalProps> = ({
           .modal-remove-btn {
             margin-top: var(--space-sm, 12px);
           }
-        `}</style>
+        ` }} />
       </div>
     </div>
   );

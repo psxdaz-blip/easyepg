@@ -205,7 +205,7 @@ const EpgMapperModal: React.FC<EpgMapperModalProps> = ({
         </div>
       </div>
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .emm-overlay {
           position: fixed; inset: 0; background: rgba(0,0,0,0.4);
           display: flex; align-items: center; justify-content: center;
@@ -291,7 +291,7 @@ const EpgMapperModal: React.FC<EpgMapperModalProps> = ({
         }
         .emm-summary { font-size: 14px; color: var(--text-secondary, #5F6368); margin: 0; }
         .emm-footer-actions { display: flex; gap: 8px; }
-      `}</style>
+      ` }} />
     </div>
   );
 };

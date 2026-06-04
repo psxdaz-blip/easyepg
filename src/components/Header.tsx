@@ -104,7 +104,7 @@ const Header: React.FC<HeaderProps> = ({
         </div>
       )}
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .header {
           display: flex;
           align-items: center;
@@ -214,7 +214,7 @@ const Header: React.FC<HeaderProps> = ({
             display: flex;
           }
         }
-      `}</style>
+      ` }} />
     </header>
   );
 };

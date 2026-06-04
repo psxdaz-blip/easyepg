@@ -259,7 +259,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
         />
       )}
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .two-pane {
           background: var(--bg, #FFFFFF);
           padding: var(--space-lg, 24px) var(--page-gutter, 24px);
@@ -443,7 +443,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
         }
         .btn--danger:hover { background: #B91C1C; }
         .btn--full { width: 100%; }
-      `}</style>
+      ` }} />
     </section>
   );
 };

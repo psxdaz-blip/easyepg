@@ -188,7 +188,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
       )}
 
       {/* ─── Styles ─── */}
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .channel-card {
           display: flex;
           align-items: center;
@@ -368,7 +368,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
           z-index: 2;
           box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         }
-      `}</style>
+      ` }} />
     </article>
   );
 };

@@ -213,13 +213,13 @@ export default function EpgPage() {
         </div>
       )}
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes slide-up {
           from { opacity: 0; transform: translateX(-50%) translateY(20px); }
           to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
         .animate-slide-up { animation: slide-up 250ms ease; }
-      `}</style>
+      ` }} />
     </main>
   );
 }
