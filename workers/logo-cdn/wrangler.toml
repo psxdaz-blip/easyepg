@@ -2,11 +2,7 @@
 name = "logo-cdn"
 main = "index.ts"
 compatibility_date = "2025-12-01"
-
-# Route — CDN subdomain
-routes = [
-  { pattern = "cdn.easyepg.tv/*", zone_id = "${CF_ZONE_ID}" },
-]
+workers_dev = true
 
 # R2 bucket binding
 [[r2_buckets]]

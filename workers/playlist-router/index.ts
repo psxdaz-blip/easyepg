@@ -2,9 +2,9 @@
 // Serves https://{subdomain}.easyepg.tv/playlist.m3u
 
 interface Env {
-  DB: D1Database;
-  CF_ACCOUNT_ID: string;
-  ENVIRONMENT: string;
+  DB?: D1Database;
+  CF_ACCOUNT_ID?: string;
+  ENVIRONMENT?: string;
 }
 
 export default {
@@ -19,21 +19,25 @@ export default {
       });
     }
 
+    // Root/welcome
+    if (url.pathname === '/') {
+      return new Response('EasyEPG Playlist Router — use /playlist.m3u', {
+        headers: { 'Content-Type': 'text/plain' },
+      });
+    }
+
     // Only serve playlist.m3u
     if (url.pathname !== '/playlist.m3u') {
       return new Response('Not Found', { status: 404 });
     }
 
-    // Extract subdomain or look up custom domain
+    // Extract subdomain from hostname
     let slug: string | null = null;
     if (host.endsWith('.easyepg.tv')) {
       slug = host.split('.')[0];
+    } else if (host.includes('.workers.dev')) {
+      slug = 'demo'; // default slug for workers.dev
     } else {
-      // Custom domain lookup — would query D1
-      // const result = await env.DB.prepare(
-      //   'SELECT slug FROM custom_domain_routes WHERE domain = ?'
-      // ).bind(host).first();
-      // slug = result?.slug ?? null;
       return new Response('Custom domain not configured', { status: 404 });
     }
 

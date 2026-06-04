@@ -11,7 +11,7 @@ crons = ["* * * * *"]
 [[d1_databases]]
 binding = "DB"
 database_name = "easyepg-db"
-database_id = ""
+database_id = "01be135c-7053-4076-a593-f8a15eb725f1"
 
 # Routes — internal verification endpoint
 routes = [

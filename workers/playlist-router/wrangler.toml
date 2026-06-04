@@ -2,18 +2,15 @@
 name = "playlist-router"
 main = "index.ts"
 compatibility_date = "2025-12-01"
+workers_dev = true
 
-# Routes — all user subdomains
-routes = [
-  { pattern = "*.easyepg.tv/playlist.m3u", zone_id = "${CF_ZONE_ID}" },
-  { pattern = "*.easyepg.tv/_version", zone_id = "${CF_ZONE_ID}" },
-]
+# Routes — set via Cloudflare API after deploy (wrangler.toml doesn't support env vars in routes)
 
 # D1 binding
 [[d1_databases]]
 binding = "DB"
 database_name = "easyepg-db"
-database_id = ""
+database_id = "01be135c-7053-4076-a593-f8a15eb725f1"
 
 # Environment variables
 [vars]
