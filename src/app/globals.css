@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── EasyEPG Design Tokens (CSS custom properties) ─── */
+
+:root {
+  --bg: #FFFFFF;
+  --bg-card: #F8F9FA;
+  --bg-hover: #F0F1F3;
+  --text-primary: #1A1A1A;
+  --text-secondary: #5F6368;
+  --text-muted: #9AA0A6;
+  --accent: #2563EB;
+  --accent-hover: #1D4ED8;
+  --accent-soft: #EFF6FF;
+  --success: #16A34A;
+  --warning: #D97706;
+  --danger: #DC2626;
+  --border: #E5E7EB;
+  --focus-ring: #2563EB;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --font-tiny: 12px;
+  --font-small: 14px;
+  --font-base: 16px;
+  --font-lg: 18px;
+  --font-h2: 22px;
+  --font-h1: 32px;
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --line-height: 1.6;
+  --btn-min-height: 56px;
+  --btn-min-width: 56px;
+  --btn-padding-x: 32px;
+  --btn-border-radius: 12px;
+  --card-border-radius: 16px;
+  --card-padding: 16px;
+  --page-max-width: 640px;
+  --page-gutter: 24px;
+  --avatar-size: 40px;
+  --avatar-size-lg: 80px;
+}
+
+/* ─── Base Reset ─── */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-base);
+  line-height: var(--line-height);
+  color: var(--text-primary);
+  background: var(--bg);
+  margin: 0;
+  padding: 0;
+}
+
+/* ─── Focus ring (global) ─── */
+
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ─── Utility classes ─── */
+
+.page-container {
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: var(--space-lg) var(--page-gutter);
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+/* ─── BigButton base ─── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  min-height: var(--btn-min-height);
+  padding: 0 var(--btn-padding-x);
+  border-radius: var(--btn-border-radius);
+  font-size: 18px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  border: none;
+  cursor: pointer;
+  transition: background 150ms ease, transform 100ms ease;
+  white-space: nowrap;
+  text-decoration: none;
+  line-height: 1;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn--primary {
+  background: var(--accent);
+  color: #FFFFFF;
+}
+
+.btn--primary:hover {
+  background: var(--accent-hover);
+}
+
+.btn--ai {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.btn--ai:hover {
+  background: #DBEAFE;
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--accent);
+  min-height: auto;
+  padding: 0 8px;
+  font-size: var(--font-base);
+  font-weight: 500;
+}
+
+.btn--danger {
+  background: var(--danger);
+  color: #FFFFFF;
+}
+
+.btn--danger:hover {
+  background: #B91C1C;
+}
+
+.btn--full {
+  width: 100%;
+}
+
+/* ─── Card ─── */
+
+.card {
+  background: var(--bg-card);
+  border-radius: var(--card-border-radius);
+  padding: var(--card-padding);
+}

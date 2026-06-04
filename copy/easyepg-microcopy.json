@@ -1,0 +1,15 @@
+{
+  "hero_headline": "Your TV channels, all in one link.",
+  "hero_subhead": "No setup, no cables — just a playlist that works everywhere.",
+  "primary_cta": "Get your magic link",
+  "onboarding_welcome": "Let's get your TV channels ready in under a minute.",
+  "onboarding_steps": [
+    "Tell us your language and region",
+    "We'll build your personal channel list",
+    "Copy your private playlist link"
+  ],
+  "ai_badge": "Auto-fixed by AI",
+  "undo_toast": "Done. Tap to undo.",
+  "beta_signup_prompt": "Enter your email to try beta",
+  "demo_script": "Welcome to EasyEPG! Getting your channels set up takes just two taps. First, we pick channels for you based on your region — everything from news to sports. Then copy what you want with one tap. Your personal playlist gets a private link you can paste right into any IPTV app like TiviMate or VLC. Our AI automatically fixes missing show schedules and channel logos, so you never have to worry about a thing. That's it — you're ready to watch."
+}

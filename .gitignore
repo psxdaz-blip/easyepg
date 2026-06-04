@@ -1,0 +1,9 @@
+node_modules/
+.next/
+*.local
+.env
+.env.local
+.env.production
+out/
+dist/
+wrangler.toml

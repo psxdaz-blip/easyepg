@@ -1,0 +1,391 @@
+// PersonalPlaylistView.tsx — two‑pane Master → My Playlist copy flow with Copy All and Smart Suggest
+
+import React, { useState, useMemo } from 'react';
+import ChannelCard, { type Channel } from './ChannelCard';
+
+/* ─── Types ─── */
+
+export type CopyMode = 'all' | 'category' | 'smart';
+
+export interface PersonalPlaylistViewProps {
+  masterChannels: Channel[];
+  myChannels: Channel[];
+  /** Mock AI confidence map for master channels */
+  aiConfidenceMap?: Record<string, { confidence: number; autoApplied: boolean }>;
+  /** Smart suggest result: AI‑picked channel IDs + avg confidence */
+  smartSuggestResult?: { channelIds: string[]; avgConfidence: number } | null;
+  /** Called when user initiates a copy */
+  onCopyFromMaster: (mode: CopyMode, categories?: string[]) => void;
+  onRemoveFromMyPlaylist: (channelId: string) => void;
+  onToggleChannel?: (channelId: string, enabled: boolean) => void;
+  /** Returns true when the viewport is narrow */
+  isMobile?: boolean;
+}
+
+/* ─── Smart Suggest Modal ─── */
+
+const SmartSuggestModal: React.FC<{
+  result: { channelIds: string[]; avgConfidence: number };
+  onCopy: () => void;
+  onDismiss: () => void;
+}> = ({ result, onCopy, onDismiss }) => (
+  <div className="two-pane__modal-overlay" role="dialog" aria-modal="true" aria-label="Smart Suggest results">
+    <div className="two-pane__modal">
+      <h2 className="two-pane__modal-title">⚡ AI suggests adding {result.channelIds.length} channels</h2>
+      <p className="two-pane__modal-conf">
+        Average confidence: {Math.round(result.avgConfidence * 100)}%
+      </p>
+      <p className="two-pane__modal-note">
+        {result.avgConfidence >= 0.75
+          ? '✅ Auto‑apply enabled — channels will be added automatically.'
+          : '⏳ Some suggestions need your review.'}
+      </p>
+      <div className="two-pane__modal-actions">
+        <button
+          className="btn btn--primary"
+          onClick={onCopy}
+          aria-label={`Copy ${result.channelIds.length} selected channels`}
+        >
+          Copy {result.channelIds.length} Selected
+        </button>
+        <button className="btn btn--ghost" onClick={onDismiss} aria-label="Dismiss suggestions">
+          Dismiss
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+/* ─── Component ─── */
+
+const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
+  masterChannels,
+  myChannels,
+  aiConfidenceMap,
+  smartSuggestResult = null,
+  onCopyFromMaster,
+  onRemoveFromMyPlaylist,
+  onToggleChannel,
+  isMobile = false,
+}) => {
+  const [showSuggestModal, setShowSuggestModal] = useState(false);
+
+  const handleSmartSuggest = () => {
+    onCopyFromMaster('smart');
+    if (smartSuggestResult) {
+      setShowSuggestModal(true);
+    }
+  };
+
+  const handleCopyAll = () => onCopyFromMaster('all');
+  const handleRemoveAll = () => myChannels.forEach((c) => onRemoveFromMyPlaylist(c.id));
+
+  const masterCount = masterChannels.length;
+  const myCount = myChannels.length;
+
+  const pane = (title: string, chs: Channel[], count: number, side: 'master' | 'mine') => (
+    <div className={`two-pane__pane two-pane__pane--${side}`}>
+      <h2 className="two-pane__pane-title">
+        {title}
+        <span className="two-pane__pane-count"> ({count})</span>
+      </h2>
+      <div className="two-pane__pane-list" role="list" aria-label={`${title} channels`}>
+        {chs.map((ch) => (
+          <ChannelCard
+            key={ch.id}
+            channel={ch}
+            aiConfidence={aiConfidenceMap?.[ch.id]?.confidence}
+            aiAutoApplied={aiConfidenceMap?.[ch.id]?.autoApplied}
+            inMyPlaylist={side === 'mine'}
+            onToggle={onToggleChannel}
+            onMenuOpen={(id) => console.log('Menu open:', id)}
+          />
+        ))}
+        {chs.length === 0 && (
+          <p className="two-pane__empty">
+            {side === 'master' ? 'No channels available.' : 'Your playlist is empty. Add channels from the Master list.'}
+          </p>
+        )}
+      </div>
+
+      {/* Pane actions */}
+      <div className="two-pane__pane-actions">
+        {side === 'master' && (
+          <>
+            <button className="btn btn--primary" onClick={handleCopyAll} aria-label="Copy all channels">
+              Copy All ({count})
+            </button>
+            <button className="btn btn--ai" onClick={handleSmartSuggest} aria-label="Smart Suggest: AI picks channels for you">
+              Smart Suggest
+            </button>
+          </>
+        )}
+        {side === 'mine' && myCount > 0 && (
+          <button className="btn btn--danger" onClick={handleRemoveAll} aria-label="Remove all channels from my playlist">
+            Remove All ({myCount})
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
+  /* ─── Mobile: Single column with bottom‑sheet modal ─── */
+  if (isMobile) {
+    return (
+      <section className="two-pane two-pane--mobile" aria-label="Personal Playlist Editor">
+        <header className="two-pane__topbar">
+          <h1 className="two-pane__title">My Playlist ({myCount})</h1>
+        </header>
+
+        {pane('My Playlist', myChannels, myCount, 'mine')}
+
+        <div className="two-pane__sticky-add">
+          <button
+            className="btn btn--primary btn--full"
+            onClick={() => setShowSuggestModal(true)}
+            aria-label="Add channels from Master Playlist"
+          >
+            Add Channels
+          </button>
+        </div>
+
+        {/* "Add Channels" modal on mobile renders the master list */}
+        {showSuggestModal && (
+          <div className="two-pane__modal-overlay" role="dialog" aria-modal="true" aria-label="Add channels">
+            <div className="two-pane__modal two-pane__modal--full">
+              <header className="two-pane__modal-header">
+                <h2 className="two-pane__modal-title">Master Playlist ({masterCount})</h2>
+                <button
+                  className="btn btn--ghost"
+                  onClick={() => setShowSuggestModal(false)}
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </header>
+              <div className="two-pane__pane-list" role="list">
+                {masterChannels.map((ch) => (
+                  <ChannelCard
+                    key={ch.id}
+                    channel={ch}
+                    aiConfidence={aiConfidenceMap?.[ch.id]?.confidence}
+                    aiAutoApplied={aiConfidenceMap?.[ch.id]?.autoApplied}
+                    onMenuOpen={(id) => console.log('Menu:', id)}
+                  />
+                ))}
+              </div>
+              <div className="two-pane__sticky-copy">
+                <button className="btn btn--primary btn--full" onClick={handleCopyAll}>
+                  Copy All ({masterCount})
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Smart Suggest modal */}
+        {smartSuggestResult && showSuggestModal && (
+          <SmartSuggestModal
+            result={smartSuggestResult}
+            onCopy={() => { onCopyFromMaster('smart'); setShowSuggestModal(false); }}
+            onDismiss={() => setShowSuggestModal(false)}
+          />
+        )}
+      </section>
+    );
+  }
+
+  /* ─── Desktop: side‑by‑side ─── */
+  return (
+    <section className="two-pane" aria-label="Personal Playlist Editor">
+      <header className="two-pane__topbar">
+        <h1 className="two-pane__title">My Playlist ({myCount})</h1>
+      </header>
+      <div className="two-pane__grid">
+        {pane('Master Playlist', masterChannels, masterCount, 'master')}
+        {pane('My Playlist', myChannels, myCount, 'mine')}
+      </div>
+
+      {/* Smart Suggest modal */}
+      {smartSuggestResult && showSuggestModal && (
+        <SmartSuggestModal
+          result={smartSuggestResult}
+          onCopy={() => { onCopyFromMaster('smart'); setShowSuggestModal(false); }}
+          onDismiss={() => setShowSuggestModal(false)}
+        />
+      )}
+
+      <style>{`
+        .two-pane {
+          background: var(--bg, #FFFFFF);
+          padding: var(--space-lg, 24px) var(--page-gutter, 24px);
+          max-width: 1024px;
+          margin: 0 auto;
+          min-height: 100vh;
+        }
+        .two-pane--mobile {
+          max-width: var(--page-max-width, 640px);
+        }
+        .two-pane__topbar {
+          margin-bottom: var(--space-lg, 24px);
+        }
+        .two-pane__title {
+          font-size: var(--font-h1, 32px);
+          font-weight: 700;
+          color: var(--text-primary, #1A1A1A);
+          margin: 0;
+        }
+        .two-pane__grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: var(--space-lg, 24px);
+          align-items: start;
+        }
+        .two-pane__pane {
+          background: var(--bg-card, #F8F9FA);
+          border-radius: var(--card-border-radius, 16px);
+          padding: var(--card-padding, 16px);
+        }
+        .two-pane__pane-title {
+          font-size: var(--font-h2, 22px);
+          font-weight: 600;
+          color: var(--text-primary, #1A1A1A);
+          margin: 0 0 var(--space-md, 16px);
+        }
+        .two-pane__pane-count {
+          font-weight: 400;
+          color: var(--text-secondary, #5F6368);
+        }
+        .two-pane__pane-list {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-xs, 8px);
+          max-height: 60vh;
+          overflow-y: auto;
+          margin-bottom: var(--space-md, 16px);
+        }
+        .two-pane__pane-actions {
+          display: flex;
+          gap: var(--space-sm, 12px);
+          flex-wrap: wrap;
+        }
+        .two-pane__empty {
+          text-align: center;
+          padding: var(--space-xl, 32px);
+          color: var(--text-muted, #9AA0A6);
+          font-size: var(--font-base, 16px);
+        }
+        .two-pane__sticky-add,
+        .two-pane__sticky-copy {
+          position: sticky;
+          bottom: 0;
+          padding: var(--space-md, 16px) 0;
+          padding-bottom: calc(var(--space-md, 16px) + env(safe-area-inset-bottom, 0px));
+          background: var(--bg, #FFFFFF);
+        }
+
+        /* ─── Modal ─── */
+        .two-pane__modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.4);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 50;
+          padding: var(--space-lg, 24px);
+        }
+        .two-pane__modal {
+          background: var(--bg, #FFFFFF);
+          border-radius: var(--card-border-radius, 16px);
+          padding: var(--space-xl, 32px);
+          max-width: 480px;
+          width: 100%;
+        }
+        .two-pane__modal--full {
+          max-width: 600px;
+          max-height: 85vh;
+          overflow-y: auto;
+          padding: var(--space-lg, 24px);
+        }
+        .two-pane__modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: var(--space-md, 16px);
+        }
+        .two-pane__modal-title {
+          font-size: var(--font-h2, 22px);
+          font-weight: 600;
+          color: var(--text-primary, #1A1A1A);
+          margin: 0 0 var(--space-xs, 8px);
+        }
+        .two-pane__modal-conf {
+          font-size: var(--font-lg, 18px);
+          color: var(--text-secondary, #5F6368);
+          margin: 0 0 var(--space-xs, 8px);
+        }
+        .two-pane__modal-note {
+          font-size: var(--font-base, 16px);
+          color: var(--text-muted, #9AA0A6);
+          margin: 0 0 var(--space-lg, 24px);
+        }
+        .two-pane__modal-actions {
+          display: flex;
+          gap: var(--space-sm, 12px);
+        }
+
+        /* ─── Shared button styles (duplicated from MasterPlaylistView for self‑containedness) ─── */
+        .btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: var(--space-xs, 8px);
+          min-height: var(--btn-min-height, 56px);
+          padding: 0 var(--btn-padding-x, 32px);
+          border-radius: var(--btn-border-radius, 12px);
+          font-size: 18px;
+          font-weight: 600;
+          font-family: var(--font-family, sans-serif);
+          border: none;
+          cursor: pointer;
+          transition: background 150ms ease, transform 100ms ease;
+          white-space: nowrap;
+          text-decoration: none;
+          line-height: 1;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn:focus-visible {
+          outline: 3px solid var(--focus-ring, #2563EB);
+          outline-offset: 2px;
+        }
+        .btn--primary {
+          background: var(--accent, #2563EB);
+          color: #FFFFFF;
+        }
+        .btn--primary:hover { background: var(--accent-hover, #1D4ED8); }
+        .btn--ai {
+          background: var(--accent-soft, #EFF6FF);
+          color: var(--accent, #2563EB);
+        }
+        .btn--ai:hover { background: #DBEAFE; }
+        .btn--ghost {
+          background: transparent;
+          color: var(--accent, #2563EB);
+          font-size: var(--font-base, 16px);
+          font-weight: 500;
+          min-height: auto;
+          padding: 0 8px;
+        }
+        .btn--danger {
+          background: var(--danger, #DC2626);
+          color: #FFFFFF;
+        }
+        .btn--danger:hover { background: #B91C1C; }
+        .btn--full { width: 100%; }
+      `}</style>
+    </section>
+  );
+};
+
+export default PersonalPlaylistView;
