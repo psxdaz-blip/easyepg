@@ -1,6 +1,6 @@
 // PersonalPlaylistView.tsx — two‑pane Master → My Playlist copy flow with Copy All and Smart Suggest
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import ChannelCard, { type Channel } from './ChannelCard';
 
 /* ─── Types ─── */
@@ -69,6 +69,8 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
   isMobile = false,
 }) => {
   const [showSuggestModal, setShowSuggestModal] = useState(false);
+  const [selectedMasterIds, setSelectedMasterIds] = useState<Set<string>>(new Set());
+  const lastClickedRef = useRef<number>(-1);
 
   const handleSmartSuggest = () => {
     onCopyFromMaster('smart');
@@ -77,26 +79,63 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
     }
   };
 
+  const handleSelectMaster = useCallback((channelId: string, shiftKey: boolean) => {
+    setSelectedMasterIds((prev) => {
+      const next = new Set(prev);
+      const idx = masterChannels.findIndex((c) => c.id === channelId);
+
+      if (shiftKey && lastClickedRef.current >= 0 && idx >= 0) {
+        // Select range from last clicked to this one
+        const start = Math.min(lastClickedRef.current, idx);
+        const end = Math.max(lastClickedRef.current, idx);
+        for (let i = start; i <= end; i++) {
+          next.add(masterChannels[i].id);
+        }
+      } else if (next.has(channelId)) {
+        next.delete(channelId);
+      } else {
+        next.add(channelId);
+      }
+
+      lastClickedRef.current = idx;
+      return next;
+    });
+  }, [masterChannels]);
+
+  const handleAddSelected = () => {
+    if (selectedMasterIds.size === 0) return;
+    // Convert to copy from master by passing selected IDs
+    onCopyFromMaster('all');
+    setSelectedMasterIds(new Set());
+  };
+
   const handleCopyAll = () => onCopyFromMaster('all');
   const handleRemoveAll = () => myChannels.forEach((c) => onRemoveFromMyPlaylist(c.id));
 
   const masterCount = masterChannels.length;
   const myCount = myChannels.length;
+  const selectedCount = selectedMasterIds.size;
 
   const pane = (title: string, chs: Channel[], count: number, side: 'master' | 'mine') => (
     <div className={`two-pane__pane two-pane__pane--${side}`}>
       <h2 className="two-pane__pane-title">
         {title}
         <span className="two-pane__pane-count"> ({count})</span>
+        {side === 'master' && selectedCount > 0 && (
+          <span className="two-pane__selected-badge">{selectedCount} selected</span>
+        )}
       </h2>
       <div className="two-pane__pane-list" role="list" aria-label={`${title} channels`}>
-        {chs.map((ch) => (
+        {chs.map((ch, i) => (
           <ChannelCard
             key={ch.id}
             channel={ch}
             aiConfidence={aiConfidenceMap?.[ch.id]?.confidence}
             aiAutoApplied={aiConfidenceMap?.[ch.id]?.autoApplied}
             inMyPlaylist={side === 'mine'}
+            selectable={side === 'master'}
+            selected={side === 'master' ? selectedMasterIds.has(ch.id) : false}
+            onSelect={side === 'master' ? handleSelectMaster : undefined}
             onToggle={onToggleChannel}
             onMenuOpen={(id) => console.log('Menu open:', id)}
           />
@@ -112,7 +151,12 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
       <div className="two-pane__pane-actions">
         {side === 'master' && (
           <>
-            <button className="btn btn--primary" onClick={handleCopyAll} aria-label="Copy all channels">
+            {selectedCount > 0 && (
+              <button className="btn btn--primary two-pane__add-btn" onClick={handleAddSelected} aria-label={`Add ${selectedCount} selected channels`}>
+                → Add {selectedCount} to My Playlist
+              </button>
+            )}
+            <button className={`btn ${selectedCount > 0 ? 'btn--secondary' : 'btn--primary'}`} onClick={handleCopyAll} aria-label="Copy all channels">
               Copy All ({count})
             </button>
             <button className="btn btn--ai" onClick={handleSmartSuggest} aria-label="Smart Suggest: AI picks channels for you">
@@ -251,10 +295,26 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
           font-weight: 600;
           color: var(--text-primary, #1A1A1A);
           margin: 0 0 var(--space-md, 16px);
+          display: flex;
+          align-items: center;
+          gap: var(--space-xs, 8px);
+          flex-wrap: wrap;
         }
         .two-pane__pane-count {
           font-weight: 400;
           color: var(--text-secondary, #5F6368);
+        }
+        .two-pane__selected-badge {
+          font-size: var(--font-small, 14px);
+          font-weight: 500;
+          color: var(--accent, #2563EB);
+          background: var(--accent-soft, #EFF6FF);
+          padding: 4px 14px;
+          border-radius: 20px;
+        }
+        .two-pane__add-btn {
+          width: 100%;
+          margin-bottom: var(--space-xs, 8px);
         }
         .two-pane__pane-list {
           display: flex;

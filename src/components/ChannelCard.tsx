@@ -30,6 +30,10 @@ export interface ChannelCardProps {
   aiAutoApplied?: boolean;
   /** True when card sits inside the user's own playlist */
   inMyPlaylist?: boolean;
+  /** Multi-select support */
+  selected?: boolean;
+  selectable?: boolean;
+  onSelect?: (channelId: string, shiftKey: boolean) => void;
   onToggle?: (channelId: string, enabled: boolean) => void;
   onMenuOpen?: (channelId: string) => void;
   onDragStart?: (channelId: string) => void;
@@ -62,6 +66,9 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
   aiConfidence,
   aiAutoApplied = false,
   inMyPlaylist = false,
+  selected = false,
+  selectable = false,
+  onSelect,
   onToggle,
   onMenuOpen,
   onDragStart,
@@ -74,17 +81,28 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
     onToggle?.(channel.id, !enabled);
   };
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (selectable && onSelect) {
+      onSelect(channel.id, e.shiftKey);
+    }
+  };
+
   return (
     <article
       id={`channel-card-${cardId}`}
       className={`
         channel-card
+        ${selectable ? 'channel-card--selectable' : ''}
+        ${selected ? 'channel-card--selected' : ''}
         ${inMyPlaylist ? 'channel-card--mine' : ''}
         ${enabled ? '' : 'channel-card--disabled'}
       `}
-      role="listitem"
+      role={selectable ? "option" : "listitem"}
       aria-label={`${channel.name}${channel.nextProgram ? `, next: ${channel.nextProgram.title} at ${formatTime(channel.nextProgram.startTime)}` : ''}`}
+      aria-selected={selectable ? selected : undefined}
+      onClick={handleClick}
       tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' && selectable && onSelect) onSelect(channel.id, e.shiftKey); }}
     >
       {/* Drag handle — visual only */}
       <button
@@ -316,6 +334,39 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
         .channel-card__toggle:focus-visible {
           outline: 3px solid var(--focus-ring, #2563EB);
           outline-offset: 2px;
+        }
+
+        /* ─── Selectable/Selected states ─── */
+        .channel-card--selectable {
+          cursor: pointer;
+        }
+        .channel-card--selectable:hover {
+          outline: 2px solid var(--accent, #2563EB);
+          outline-offset: -2px;
+        }
+        .channel-card--selected {
+          background: var(--accent-soft, #EFF6FF) !important;
+          outline: 2px solid var(--accent, #2563EB);
+          outline-offset: -2px;
+          position: relative;
+        }
+        .channel-card--selected::before {
+          content: '✓';
+          position: absolute;
+          top: 8px;
+          left: 8px;
+          width: 28px;
+          height: 28px;
+          background: var(--accent, #2563EB);
+          color: #FFFFFF;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 14px;
+          font-weight: 700;
+          z-index: 2;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         }
       `}</style>
     </article>
