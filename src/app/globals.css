@@ -117,6 +117,16 @@ body {
   background: var(--accent-hover);
 }
 
+.btn--secondary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border);
+}
+
+.btn--secondary:hover {
+  background: var(--bg-hover);
+}
+
 .btn--ai {
   background: var(--accent-soft);
   color: var(--accent);

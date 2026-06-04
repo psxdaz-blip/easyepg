@@ -1,0 +1,24 @@
+; EasyEPG — DNS Zone File
+; Import this file into Cloudflare Dashboard:
+;   → easyepg.tv zone → DNS → Import → Select this file
+;
+; All records are proxied (orange cloud) so Workers can intercept traffic.
+; TTL = 120 (2 min) for fast propagation during setup; set to Auto later.
+
+easyepg.tv.		120	IN	A	192.0.2.1
+; Apex — points to placeholder IP, proxied so Workers handle the routes
+
+*.easyepg.tv.		120	IN	A	192.0.2.1
+; Wildcard — catches all subdomains so *.easyepg.tv/playlist.m3u resolves
+
+demo.easyepg.tv.	120	IN	A	192.0.2.1
+; Demo / testing subdomain — https://demo.easyepg.tv/playlist.m3u
+
+cdn.easyepg.tv.		120	IN	A	192.0.2.1
+; Logo CDN — https://cdn.easyepg.tv/logos/{key}
+
+custom.easyepg.tv.	120	IN	A	192.0.2.1
+; Custom domain target — users CNAME their domain to this
+
+verify.easyepg.tv.	120	IN	A	192.0.2.1
+; CNAME verification worker — internal endpoint
