@@ -34,9 +34,29 @@ export default function OnboardingPage() {
     if (language && region) setStep("ai-prefs");
   };
 
-  const handleAiNext = () => {
+  const handleAiNext = async () => {
+    // Save preferences via API
+    try {
+      const token = sessionStorage.getItem("easyepg_token");
+      if (token) {
+        await fetch("/api/onboarding/preferences", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            language,
+            region,
+            aiThreshold: 0.75,
+            aiAutoApply,
+          }),
+        });
+      }
+    } catch {
+      // Silent fail — non-critical
+    }
     setStep("ready");
-    // In production: POST /api/v1/onboarding/preferences
   };
 
   const handleFinish = () => {

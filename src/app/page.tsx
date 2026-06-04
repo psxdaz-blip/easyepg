@@ -7,11 +7,27 @@ export default function LandingPage() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    setSent(true);
-    // In production: POST /api/auth/send-magic-link
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth/send-magic-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error("Failed to send");
+      setSent(true);
+    } catch {
+      setError("Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -38,15 +54,19 @@ export default function LandingPage() {
           />
           <button
             type="submit"
-            disabled={sent}
+            disabled={sent || loading}
             className="btn btn--primary btn--full"
             aria-label="Send me the magic link"
           >
-            {sent ? "✉️ Check your inbox" : "Get your magic link"}
+            {loading ? "Sending..." : sent ? "✉️ Check your inbox" : "Get your magic link"}
           </button>
         </form>
 
-        <p className="text-[14px] text-[#9AA0A6] mt-4">
+        {error && (
+          <p className="text-[14px] text-[#DC2626] mt-3">{error}</p>
+        )}
+
+        <p className="text-[14px] text-[#9AA0A6] mt-2">
           No password. No setup. Works in any IPTV app.
         </p>
 
