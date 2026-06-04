@@ -155,6 +155,16 @@ class EpgStore {
     this.entries.delete(id);
   }
 
+  /** Set channels for a source (used by real parser) */
+  setChannels(sourceId: string, chs: EpgChannel[]) {
+    this.channels.set(sourceId, chs);
+  }
+
+  /** Set entries for a source (used by real parser) */
+  setEntries(sourceId: string, ents: EpgEntry[]) {
+    this.entries.set(sourceId, ents);
+  }
+
   // Channel-to-EPG mapping
   setMapping(channelId: string, tvgId: string) {
     this.channelMapping.set(channelId, tvgId);
