@@ -176,7 +176,7 @@ export default function PlaylistPage() {
   };
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white px-3">
       <Header
         title={activePlaylist.name}
         showBack
@@ -186,7 +186,7 @@ export default function PlaylistPage() {
       />
 
       {/* Playlist tabs bar */}
-      <div className="flex items-center gap-2 px-6 py-3 border-b border-[#E5E7EB] overflow-x-auto">
+      <div className="flex items-center gap-2 px-3 py-3 border-b border-[#E5E7EB] overflow-x-auto">
         <button
           className={`btn rounded-full ${viewMode === "master" ? "btn--primary" : "btn--ai"}`}
           onClick={() => setViewMode("master")}

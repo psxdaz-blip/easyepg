@@ -456,14 +456,14 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
       <style dangerouslySetInnerHTML={{ __html: `
         .two-pane {
           background: var(--bg, #FFFFFF);
-          padding: var(--space-lg, 24px) var(--page-gutter, 24px);
+          padding: 24px 12px;
           max-width: 1200px;
           margin: 0 auto;
           min-height: 100vh;
         }
         @media (max-width: 600px) {
           .two-pane {
-            padding: 16px 12px;
+            padding: 16px 8px;
           }
         }
         .two-pane--mobile {
