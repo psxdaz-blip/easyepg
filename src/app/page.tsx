@@ -160,15 +160,21 @@ export default function LandingPage() {
           display: block;
           width: 100%;
           text-align: center;
-          font-size: clamp(56px, 12vw, 100px);
+          font-size: clamp(40px, 12vw, 90px);
           font-weight: 900;
           color: rgba(210,255,0,0.15);
           letter-spacing: -0.03em;
           white-space: nowrap;
-          line-height: 1.1;
+          line-height: 1.2;
           cursor: pointer;
           transition: color 200ms ease;
           user-select: none;
+          padding: 12px 20px;
+          border-radius: 14px;
+          box-sizing: border-box;
+        }
+        .landing__word:hover {
+          background: rgba(210,255,0,0.04);
         }
         .landing__word--active {
           color: #D2FF00;
