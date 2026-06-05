@@ -153,8 +153,13 @@ export default function LandingPage() {
           align-items: center;
           gap: 0;
           margin-bottom: 48px;
+          width: 100%;
+          max-width: 500px;
         }
         .landing__word {
+          display: block;
+          width: 100%;
+          text-align: center;
           font-size: clamp(56px, 12vw, 100px);
           font-weight: 900;
           color: rgba(210,255,0,0.15);
