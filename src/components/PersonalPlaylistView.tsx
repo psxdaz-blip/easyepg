@@ -96,8 +96,11 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
   const [showSuggestModal, setShowSuggestModal] = useState(false);
   const [selectedMasterIds, setSelectedMasterIds] = useState<Set<string>>(new Set());
   const [masterCategory, setMasterCategory] = useState<string>('All');
+  const [playlistCategory, setPlaylistCategory] = useState<string>('All');
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const lastClickedRef = useRef<number>(-1);
   const catScrollRef = useRef<HTMLDivElement>(null);
+  const playlistCatScrollRef = useRef<HTMLDivElement>(null);
 
   // Extract unique categories from master channels
   const masterCategories = useMemo(() => {
@@ -106,17 +109,41 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
     return ['All', ...Array.from(cats).sort()];
   }, [masterChannels]);
 
+  // Categories for the playlist pane: from channel groupTitles + custom playlist categories
+  const playlistCategoriesAll = useMemo(() => {
+    const cats = new Set<string>();
+    myChannels.forEach((c) => { if (c.groupTitle || c.group) cats.add(c.groupTitle || c.group!); });
+    playlistCategories.forEach((c) => cats.add(c));
+    return ['All', ...Array.from(cats).sort()];
+  }, [myChannels, playlistCategories]);
+
+  // Filtered playlist channels by selected category
+  const filteredPlaylist = useMemo(() => {
+    if (playlistCategory === 'All') return myChannels;
+    return myChannels.filter((c) => (c.groupTitle || c.group) === playlistCategory);
+  }, [myChannels, playlistCategory]);
+
   // Filtered master channels by selected category
   const filteredMaster = useMemo(() => {
     if (masterCategory === 'All') return masterChannels;
     return masterChannels.filter((c) => (c.groupTitle || c.group) === masterCategory);
   }, [masterChannels, masterCategory]);
 
-  const scrollCategory = (dir: 'left' | 'right') => {
-    const el = catScrollRef.current;
+  const scrollCategory = (dir: 'left' | 'right', ref: React.RefObject<HTMLDivElement | null>) => {
+    const el = ref.current;
     if (!el) return;
-    const scrollAmount = 200;
-    el.scrollBy({ left: dir === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+    el.scrollBy({ left: dir === 'left' ? -200 : 200, behavior: 'smooth' });
+  };
+
+  const handleMenuOpen = (channelId: string) => {
+    setMenuOpenId(menuOpenId === channelId ? null : channelId);
+  };
+
+  const handleMenuAction = (action: string, channelId: string) => {
+    setMenuOpenId(null);
+    if (action === 'remove' && onRemoveFromMyPlaylist) {
+      onRemoveFromMyPlaylist(channelId);
+    }
   };
 
   const handleSmartSuggest = () => {
@@ -164,11 +191,15 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
   const selectedCount = selectedMasterIds.size;
 
   const pane = (title: string, chs: Channel[], count: number, side: 'master' | 'mine') => {
-    // Group "mine" channels by category
-    const grouped = side === 'mine' ? groupByCategory(chs) : null;
-    // Use filtered channels for master
-    const displayChs = side === 'master' ? filteredMaster : chs;
-    const displayCount = side === 'master' ? filteredMaster.length : count;
+    // Use filtered channels
+    const displayChs = side === 'master' ? filteredMaster : filteredPlaylist;
+    const displayCount = displayChs.length;
+    // Group "mine" display channels by category (for section headers)
+    const grouped = side === 'mine' ? groupByCategory(displayChs) : null;
+    const categories = side === 'master' ? masterCategories : playlistCategoriesAll;
+    const activeCat = side === 'master' ? masterCategory : playlistCategory;
+    const setActiveCat = side === 'master' ? setMasterCategory : setPlaylistCategory;
+    const scrollRef = side === 'master' ? catScrollRef : playlistCatScrollRef;
 
     return (
     <div className={`two-pane__pane two-pane__pane--${side}`}>
@@ -180,34 +211,36 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
         )}
       </h2>
 
-      {/* Category carousel — master only */}
-      {side === 'master' && (
-        <div className="two-pane__cat-carousel">
-          <button className="two-pane__cat-arrow" onClick={() => scrollCategory('left')} aria-label="Previous category">‹</button>
-          <div className="two-pane__cat-scroll" ref={catScrollRef}>
-            {masterCategories.map((cat) => (
-              <button
-                key={cat}
-                className={`two-pane__cat-pill${masterCategory === cat ? ' two-pane__cat-pill--active' : ''}`}
-                onClick={() => setMasterCategory(cat)}
-              >
-                {cat}
-                {cat !== 'All' && (
-                  <span className="two-pane__cat-count">{masterChannels.filter((c) => (c.groupTitle || c.group) === cat).length}</span>
-                )}
-              </button>
-            ))}
-          </div>
-          <button className="two-pane__cat-arrow" onClick={() => scrollCategory('right')} aria-label="Next category">›</button>
+      {/* Category carousel */}
+      <div className="two-pane__cat-carousel">
+        <button className="two-pane__cat-arrow" onClick={() => scrollCategory('left', scrollRef)} aria-label="Previous category">‹</button>
+        <div className="two-pane__cat-scroll" ref={scrollRef}>
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              className={`two-pane__cat-pill${activeCat === cat ? ' two-pane__cat-pill--active' : ''}`}
+              onClick={() => setActiveCat(cat)}
+            >
+              {cat}
+              {cat !== 'All' && (
+                <span className="two-pane__cat-count">
+                  {side === 'master'
+                    ? masterChannels.filter((c) => (c.groupTitle || c.group) === cat).length
+                    : (grouped?.get(cat)?.length || 0)}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
-      )}
+        <button className="two-pane__cat-arrow" onClick={() => scrollCategory('right', scrollRef)} aria-label="Next category">›</button>
+      </div>
 
       <div className="two-pane__pane-list" role="list" aria-label={`${title} channels`}>
-        {side === 'mine' && grouped ? (
-          // Render with category headers (including empty custom categories)
+        {side === 'mine' && activeCat === 'All' ? (
+          // Render with category headers for All view
           <>
             {playlistCategories.map((cat) => {
-              const catChs = grouped.get(cat) || [];
+              const catChs = grouped?.get(cat) || [];
               return (
                 <div key={cat} className="two-pane__cat-group">
                   <div className="two-pane__cat-header">{cat} {catChs.length > 0 && <span className="two-pane__cat-count">({catChs.length})</span>}</div>
@@ -215,11 +248,9 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
                     <ChannelCard
                       key={ch.id}
                       channel={ch}
-                      aiConfidence={aiConfidenceMap?.[ch.id]?.confidence}
-                      aiAutoApplied={aiConfidenceMap?.[ch.id]?.autoApplied}
                       inMyPlaylist={true}
                       onToggle={onToggleChannel}
-                      onMenuOpen={(id) => console.log('Menu open:', id)}
+                      onMenuOpen={handleMenuOpen}
                     />
                   ))}
                 </div>
@@ -227,7 +258,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
             })}
           </>
         ) : (
-          // Flat list for master (filtered by category)
+          // Flat list (filtered by category for both panes)
           displayChs.map((ch, i) => (
             <ChannelCard
               key={ch.id}
@@ -239,7 +270,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
               selected={side === 'master' ? selectedMasterIds.has(ch.id) : false}
               onSelect={side === 'master' ? handleSelectMaster : undefined}
               onToggle={onToggleChannel}
-              onMenuOpen={(id) => console.log('Menu open:', id)}
+              onMenuOpen={handleMenuOpen}
             />
           ))
         )}
@@ -249,6 +280,17 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
           </p>
         )}
       </div>
+
+      {/* Floating context menu */}
+      {menuOpenId && (
+        <div className="two-pane__menu-overlay" onClick={() => setMenuOpenId(null)}>
+          <div className="two-pane__menu" onClick={(e) => e.stopPropagation()}>
+            <button className="two-pane__menu-item" onClick={() => handleMenuAction('remove', menuOpenId)}>
+              🗑️ Remove from playlist
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Pane actions */}
       <div className="two-pane__pane-actions">
@@ -267,9 +309,9 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
             </button>
           </>
         )}
-        {side === 'mine' && myCount > 0 && (
+        {side === 'mine' && filteredPlaylist.length > 0 && (
           <button className="btn btn--danger" onClick={handleRemoveAll} aria-label="Remove all channels from my playlist">
-            Remove All ({myCount})
+            Remove All ({filteredPlaylist.length})
           </button>
         )}
       </div>
@@ -557,6 +599,44 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
           padding: var(--space-md, 16px) 0;
           padding-bottom: calc(var(--space-md, 16px) + env(safe-area-inset-bottom, 0px));
           background: var(--bg, #FFFFFF);
+        }
+
+        /* ─── Context menu ─── */
+        .two-pane__menu-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 100;
+        }
+        .two-pane__menu {
+          position: absolute;
+          background: #FFFFFF;
+          border-radius: 12px;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+          padding: 6px;
+          min-width: 200px;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+        }
+        .two-pane__menu-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          width: 100%;
+          padding: 12px 16px;
+          border: none;
+          background: none;
+          font-size: 15px;
+          color: #1A1A1A;
+          cursor: pointer;
+          border-radius: 8px;
+          transition: background 150ms ease;
+        }
+        .two-pane__menu-item:hover {
+          background: #F8F9FA;
+        }
+        .two-pane__menu-item--danger {
+          color: #DC2626;
         }
 
         /* ─── Modal ─── */
