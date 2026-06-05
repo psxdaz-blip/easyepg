@@ -152,7 +152,7 @@ export default function LandingPage() {
           flex-direction: column;
           align-items: center;
           gap: 0;
-          margin-bottom: 48px;
+          margin-bottom: 16px;
           width: 100%;
           max-width: 500px;
         }
@@ -160,10 +160,10 @@ export default function LandingPage() {
           display: block;
           width: 100%;
           text-align: center;
-          font-size: clamp(56px, 20vw, 150px);
+          font-size: clamp(48px, 18vw, 130px);
           font-weight: 900;
           color: rgba(210,255,0,0.15);
-          letter-spacing: 0.08em;
+          letter-spacing: -0.03em;
           white-space: nowrap;
           line-height: 1.2;
           cursor: pointer;
@@ -181,7 +181,7 @@ export default function LandingPage() {
           flex-direction: column;
           gap: 12px;
           width: 100%;
-          margin-bottom: 24px;
+          margin-bottom: 12px;
         }
         .landing__input {
           width: 100%;
