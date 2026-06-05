@@ -1,106 +1,208 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 
+const WORDS = ["Login", "Register"];
+
 export default function LandingPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
+  const [wordIndex, setWordIndex] = useState(0);
+  const [direction, setDirection] = useState<'left' | 'right'>('right');
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const goNext = useCallback(() => {
+    setDirection('right');
+    setWordIndex((prev) => (prev + 1) % WORDS.length);
+  }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch("/api/auth/send-magic-link", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      if (!res.ok) throw new Error("Failed to send");
-      setSent(true);
-      setTimeout(() => router.push(`/verify?email=${encodeURIComponent(email)}`), 1200);
-    } catch {
-      setError("Something went wrong. Try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const goPrev = useCallback(() => {
+    setDirection('left');
+    setWordIndex((prev) => (prev - 1 + WORDS.length) % WORDS.length);
+  }, []);
+
+  const slideFrom = direction === 'right' ? '30px' : '-30px';
 
   return (
-    <main className="min-h-screen bg-white flex flex-col items-center justify-center px-6 py-12">
-      <div className="w-full max-w-[480px] text-center">
-        {/* Logo / Brand */}
-        <h1 className="text-[32px] md:text-[36px] font-bold text-[#1A1A1A] leading-tight mb-3">
-          Your TV channels,<br />all in one link.
-        </h1>
-        <p className="text-[18px] text-[#5F6368] mb-8 leading-relaxed">
-          No setup, no cables — just a playlist that works everywhere.
-        </p>
-
-        {/* Magic Link Form */}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
-            aria-label="Enter your email"
-            required
-            className="w-full min-h-[56px] px-6 rounded-[12px] border-2 border-[#E5E7EB] text-[18px] text-[#1A1A1A] bg-white placeholder:text-[#9AA0A6] outline-none focus:border-[#2563EB] focus:ring-3 focus:ring-[#2563EB]/20 transition-colors"
-          />
-          <button
-            type="submit"
-            disabled={sent || loading}
-            className="btn btn--primary btn--full"
-            aria-label="Send me the magic link"
-          >
-            {loading ? "Sending..." : sent ? "✉️ Check your inbox" : "Get your magic link"}
+    <main className="landing">
+      {/* Carousel hero */}
+      <section className="landing__hero">
+        <div className="landing__carousel">
+          <button className="landing__arrow landing__arrow--left" onClick={goPrev} aria-label="Previous">
+            ‹
           </button>
-        </form>
-
-        {error && (
-          <p className="text-[14px] text-[#DC2626] mt-3">{error}</p>
-        )}
-
-        <p className="text-[14px] text-[#9AA0A6] mt-2">
-          No password. No setup. Works in any IPTV app.
-        </p>
-
-        {/* Compatibility badges */}
-        <div className="flex flex-wrap justify-center gap-3 mt-10">
-          {["TiviMate", "IPTV Smarters", "VLC", "Plex", "Jellyfin"].map(
-            (app) => (
+          <div className="landing__carousel-track">
+            {WORDS.map((w, i) => (
               <span
-                key={app}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#F8F9FA] text-[14px] text-[#5F6368] font-medium"
+                key={w}
+                className="landing__carousel-word"
+                style={{
+                  opacity: i === wordIndex ? 1 : 0,
+                  transform: i === wordIndex ? 'translateX(0)' : `translateX(${i === wordIndex ? 0 : slideFrom})`,
+                  pointerEvents: i === wordIndex ? 'auto' : 'none' as const,
+                }}
               >
-                <span className="text-[#16A34A]">✓</span> {app}
+                {w}
               </span>
-            )
-          )}
+            ))}
+          </div>
+          <button className="landing__arrow landing__arrow--right" onClick={goNext} aria-label="Next">
+            ›
+          </button>
         </div>
+        <p className="landing__tagline">Your TV channels, all in one link.</p>
+      </section>
 
-        {/* Demo CTA */}
-        <div className="mt-12 pt-8 border-t border-[#E5E7EB]">
-          <p className="text-[16px] text-[#5F6368] mb-4">
-            Want to see it first?
-          </p>
-          <Link
-            href="/dashboard"
-            className="btn btn--ai"
-            aria-label="View demo dashboard"
-          >
-            View demo →
-          </Link>
-        </div>
+      <p className="landing__note">Works in any IPTV app.</p>
+
+      <div className="landing__badges">
+        {["TiviMate", "IPTV Smarters", "VLC", "Plex", "Jellyfin"].map((app) => (
+          <span key={app} className="landing__badge">
+            <span className="landing__check">✓</span> {app}
+          </span>
+        ))}
       </div>
+
+      <div className="landing__demo">
+        <p className="landing__demo-text">Want to see it first?</p>
+        <Link href="/dashboard" className="landing__demo-link" aria-label="View demo dashboard">
+          View demo →
+        </Link>
+      </div>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        .landing {
+          min-height: 100vh;
+          background: #111112;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 40px 24px;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          gap: 0;
+        }
+        .landing__hero {
+          text-align: center;
+          width: 100%;
+          max-width: 860px;
+          margin-bottom: 32px;
+        }
+        .landing__carousel {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          margin-bottom: 20px;
+          position: relative;
+        }
+        .landing__carousel-track {
+          position: relative;
+          height: 1.15em;
+          width: 100%;
+          max-width: 620px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .landing__carousel-word {
+          position: absolute;
+          font-size: clamp(72px, 18vw, 160px);
+          font-weight: 900;
+          color: #D2FF00;
+          letter-spacing: -0.04em;
+          transition: opacity 400ms ease, transform 400ms ease;
+          white-space: nowrap;
+          line-height: 1;
+          text-shadow: 0 0 100px rgba(210,255,0,0.2);
+          user-select: none;
+        }
+        .landing__arrow {
+          flex-shrink: 0;
+          width: 56px;
+          height: 56px;
+          border-radius: 50%;
+          border: 1.5px solid rgba(255,255,255,0.08);
+          background: rgba(255,255,255,0.03);
+          color: rgba(255,255,255,0.35);
+          font-size: 28px;
+          font-weight: 300;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 250ms ease;
+          line-height: 1;
+        }
+        .landing__arrow:hover {
+          border-color: #D2FF00;
+          color: #D2FF00;
+          background: rgba(210,255,0,0.06);
+        }
+        .landing__arrow:active {
+          transform: scale(0.9);
+        }
+        .landing__tagline {
+          font-size: clamp(14px, 2vw, 18px);
+          color: rgba(255,255,255,0.45);
+          font-weight: 400;
+          letter-spacing: 0.3px;
+          margin: 0;
+        }
+        .landing__note {
+          font-size: 13px;
+          color: rgba(255,255,255,0.2);
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+          margin: 0 0 28px;
+        }
+        .landing__badges {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 8px;
+          margin-bottom: 0;
+        }
+        .landing__badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 7px 14px;
+          border-radius: 100px;
+          background: rgba(255,255,255,0.04);
+          color: rgba(255,255,255,0.45);
+          font-size: 13px;
+          font-weight: 500;
+          border: 1px solid rgba(255,255,255,0.06);
+        }
+        .landing__check { color: #D2FF00; font-weight: 700; }
+        .landing__demo {
+          margin-top: 40px;
+          padding-top: 28px;
+          border-top: 1px solid rgba(255,255,255,0.06);
+          text-align: center;
+          width: 100%;
+          max-width: 400px;
+        }
+        .landing__demo-text {
+          font-size: 14px;
+          color: rgba(255,255,255,0.3);
+          margin: 0 0 14px;
+        }
+        .landing__demo-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 12px 28px;
+          border-radius: 100px;
+          background: rgba(210,255,0,0.08);
+          color: #D2FF00;
+          font-size: 15px;
+          font-weight: 600;
+          text-decoration: none;
+          transition: background 200ms ease;
+          border: 1px solid rgba(210,255,0,0.15);
+        }
+        .landing__demo-link:hover { background: rgba(210,255,0,0.15); }
+      ` }} />
     </main>
   );
 }

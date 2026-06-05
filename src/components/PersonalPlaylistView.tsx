@@ -23,6 +23,12 @@ export type CopyMode = 'all' | 'category' | 'smart';
 export interface PersonalPlaylistViewProps {
   masterChannels: Channel[];
   myChannels: Channel[];
+  /** Name of the active personal playlist */
+  activePlaylistName?: string;
+  /** Color of the active personal playlist */
+  activePlaylistColor?: string;
+  /** Other playlists to show on the right side (for multi-playlist view) */
+  otherPlaylists?: Array<{ id: string; name: string; color?: string; channels: Channel[] }>;
   /** Mock AI confidence map for master channels */
   aiConfidenceMap?: Record<string, { confidence: number; autoApplied: boolean }>;
   /** Smart suggest result: AI‑picked channel IDs + avg confidence */
@@ -79,6 +85,9 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
   onCopyFromMaster,
   onRemoveFromMyPlaylist,
   onToggleChannel,
+  otherPlaylists = [],
+  activePlaylistName = 'My Playlist',
+  activePlaylistColor = '',
   isMobile = false,
 }) => {
   const [showSuggestModal, setShowSuggestModal] = useState(false);
@@ -212,15 +221,15 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
   );
   };
 
-  /* ─── Mobile: Single column with bottom‑sheet modal ─── */
+  /* ─── Mobile: Single column ─── */
   if (isMobile) {
     return (
       <section className="two-pane two-pane--mobile" aria-label="Personal Playlist Editor">
         <header className="two-pane__topbar">
-          <h1 className="two-pane__title">My Playlist ({myCount})</h1>
+          <h1 className="two-pane__title">{activePlaylistName} ({myCount})</h1>
         </header>
 
-        {pane('My Playlist', myChannels, myCount, 'mine')}
+        {pane(activePlaylistName, myChannels, myCount, 'mine')}
 
         <div className="two-pane__sticky-add">
           <button
@@ -279,14 +288,22 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
   }
 
   /* ─── Desktop: side‑by‑side ─── */
+
   return (
     <section className="two-pane" aria-label="Personal Playlist Editor">
       <header className="two-pane__topbar">
-        <h1 className="two-pane__title">My Playlist ({myCount})</h1>
+        <h1 className="two-pane__title">{activePlaylistName} ({myCount})</h1>
       </header>
       <div className="two-pane__grid">
         {pane('Master Playlist', masterChannels, masterCount, 'master')}
-        {pane('My Playlist', myChannels, myCount, 'mine')}
+        <div className="two-pane__right">
+          <div
+            className={`two-pane__sheet two-pane__sheet--first`}
+            style={activePlaylistColor ? { borderColor: activePlaylistColor, borderWidth: 2, borderStyle: 'solid', borderRadius: 20 } : undefined}
+          >
+            {pane(activePlaylistName, myChannels, myCount, 'mine')}
+          </div>
+        </div>
       </div>
 
       {/* Smart Suggest modal */}
@@ -302,9 +319,14 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
         .two-pane {
           background: var(--bg, #FFFFFF);
           padding: var(--space-lg, 24px) var(--page-gutter, 24px);
-          max-width: 1024px;
+          max-width: 1200px;
           margin: 0 auto;
           min-height: 100vh;
+        }
+        @media (max-width: 600px) {
+          .two-pane {
+            padding: 16px 12px;
+          }
         }
         .two-pane--mobile {
           max-width: var(--page-max-width, 640px);
@@ -320,14 +342,29 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
         }
         .two-pane__grid {
           display: grid;
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: 1fr;
           gap: var(--space-lg, 24px);
           align-items: start;
         }
+        @media (min-width: 900px) {
+          .two-pane__grid {
+            grid-template-columns: 380px 1fr;
+          }
+        }
+        .two-pane__right {
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+        }
+        .two-pane__sheet--first {
+          outline: 3px solid var(--accent, #2563EB);
+          outline-offset: 2px;
+          border-radius: 20px;
+        }
         .two-pane__pane {
           background: var(--bg-card, #F8F9FA);
-          border-radius: var(--card-border-radius, 16px);
-          padding: var(--card-padding, 16px);
+          border-radius: var(--card-border-radius, 20px);
+          padding: var(--card-padding, 20px);
         }
         .two-pane__pane-title {
           font-size: var(--font-h2, 22px);
@@ -373,6 +410,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
           padding: var(--space-xl, 32px);
           color: var(--text-muted, #9AA0A6);
           font-size: var(--font-base, 16px);
+          border-radius: 20px;
         }
         /* ─── Category grouping ─── */
         .two-pane__cat-group {
@@ -457,7 +495,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
           gap: var(--space-xs, 8px);
           min-height: var(--btn-min-height, 56px);
           padding: 0 var(--btn-padding-x, 32px);
-          border-radius: var(--btn-border-radius, 12px);
+          border-radius: var(--btn-border-radius, 14px);
           font-size: 18px;
           font-weight: 600;
           font-family: var(--font-family, sans-serif);

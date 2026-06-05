@@ -195,7 +195,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
           gap: var(--space-sm, 12px);
           padding: var(--space-sm, 12px) var(--space-md, 16px);
           background: var(--bg-card, #F8F9FA);
-          border-radius: var(--card-border-radius, 16px);
+          border-radius: var(--card-border-radius, 20px);
           min-height: 72px;
           cursor: default;
           transition: background 150ms ease, opacity 200ms ease;
@@ -221,7 +221,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
           background: none;
           border: none;
           cursor: grab;
-          border-radius: 8px;
+          border-radius: 12px;
           touch-action: none;
         }
         .channel-card__drag:focus-visible {

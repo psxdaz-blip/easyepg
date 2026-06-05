@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import Header from "@/components/Header";
+import NewPlaylistModal from "@/components/NewPlaylistModal";
 import NewCategoryModal from "@/components/NewCategoryModal";
 import AssignCategoryModal from "@/components/AssignCategoryModal";
 import CopyCategoriesModal from "@/components/CopyCategoriesModal";
+import ConfirmDeleteModal from "@/components/ConfirmDeleteModal";
 import MasterPlaylistView from "@/components/MasterPlaylistView";
 import PersonalPlaylistView from "@/components/PersonalPlaylistView";
 import {
@@ -13,16 +15,45 @@ import {
   mockAiConfidenceMap,
 } from "@/lib/mock-data";
 
+interface Playlist {
+  id: string;
+  name: string;
+  channelIds: string[];
+  color?: string;
+}
+
+const PLAYLIST_COLORS = [
+  '#D2FF00', // neon green
+  '#FF6B9D', // pink
+  '#5BC0EB', // light blue
+  '#00C9A7', // aqua green
+  '#FFD166', // yellow
+  '#FF8C42', // orange
+  '#C084FC', // purple
+  '#F472B6', // rose
+];
+
 type ViewMode = "master" | "personal";
 
 export default function PlaylistPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("personal");
   const [toast, setToast] = useState<string | null>(null);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [newPlaylistModalOpen, setNewPlaylistModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [copyCategoriesModalOpen, setCopyCategoriesModalOpen] = useState(false);
   const [pendingAssignIds, setPendingAssignIds] = useState<string[]>([]);
   const [customCategories, setCustomCategories] = useState<string[]>([]);
+
+  // Multi-playlist management
+  const [playlists, setPlaylists] = useState<Playlist[]>([
+    { id: "pl_default", name: "My Playlist", channelIds: mockMyChannels.map((c) => c.id), color: '#D2FF00' },
+  ]);
+  const [activePlaylistId, setActivePlaylistId] = useState("pl_default");
+
+  const activePlaylist = playlists.find((p) => p.id === activePlaylistId) || playlists[0];
+  const activeChannels = mockMasterChannels.filter((c) => activePlaylist.channelIds.includes(c.id));
 
   const allCategories = useMemo(() => {
     const cats = new Set<string>();
@@ -36,9 +67,45 @@ export default function PlaylistPage() {
     setTimeout(() => setToast(null), 4000);
   };
 
-  const handleNewPlaylist = () => {
-    showToast("✅ New playlist created — add channels from the Master list");
+  // All playlists (for right pane display) — exclude active
+  const otherPlaylists = playlists.filter((p) => p.id !== activePlaylistId);
+  const otherChannelsLists = otherPlaylists.map((p) => ({
+    id: p.id,
+    name: p.name,
+    color: p.color,
+    channels: mockMasterChannels.filter((c) => p.channelIds.includes(c.id)),
+  }));
+
+  const handleNewPlaylist = (name: string) => {
+    const id = `pl_${Date.now()}`;
+    setPlaylists((prev) => {
+      const usedColors = new Set(prev.map((p) => p.color).filter(Boolean));
+      const color = PLAYLIST_COLORS.find((c) => !usedColors.has(c)) || PLAYLIST_COLORS[prev.length % PLAYLIST_COLORS.length];
+      return [...prev, { id, name, channelIds: [], color }];
+    });
+    setActivePlaylistId(id);
+    showToast(`✅ "${name}" created — add channels from Master`);
   };
+
+  const handleCopyToPlaylist = useCallback((channelIds: string[]) => {
+    setPlaylists((prev) =>
+      prev.map((p) =>
+        p.id === activePlaylistId
+          ? { ...p, channelIds: [...new Set([...p.channelIds, ...channelIds])] }
+          : p
+      )
+    );
+  }, [activePlaylistId]);
+
+  const handleRemoveFromPlaylist = useCallback((channelId: string) => {
+    setPlaylists((prev) =>
+      prev.map((p) =>
+        p.id === activePlaylistId
+          ? { ...p, channelIds: p.channelIds.filter((id) => id !== channelId) }
+          : p
+      )
+    );
+  }, [activePlaylistId]);
 
   const handleNewCategory = (name: string) => {
     setCustomCategories((prev) => [...prev, name]);
@@ -59,22 +126,9 @@ export default function PlaylistPage() {
     showToast(`✅ ${count} channels copied from ${categories.length} categor${categories.length > 1 ? "ies" : "y"}`);
   };
 
-  const handleCopyFromMaster = (
-    mode: "all" | "category" | "smart",
-    _categories?: string[]
-  ) => {
-    const count =
-      mode === "all"
-        ? mockMasterChannels.length
-        : mode === "smart"
-        ? 12
-        : 8;
-    showToast(`✅ ${count} channels copied to My Playlist`);
-  };
-
-  const handleRemoveFromMyPlaylist = (channelId: string) => {
-    const ch = mockMyChannels.find((c) => c.id === channelId);
-    showToast(`"${ch?.name ?? "Channel"}" removed`);
+  const handleCopyFromMaster = () => {
+    const count = mockMasterChannels.length;
+    showToast(`✅ ${count} channels copied to "${activePlaylist.name}"`);
   };
 
   // Merge mock categories with custom ones for the filter rail
@@ -91,35 +145,69 @@ export default function PlaylistPage() {
       : []),
   ] as typeof mockMasterChannels;
 
+  const canDelete = playlists.length > 1 && activePlaylistId !== "pl_default";
+
+  const handleDeletePlaylist = () => {
+    if (!canDelete) return;
+    setPlaylists((prev) => prev.filter((p) => p.id !== activePlaylistId));
+    // Switch to the first remaining playlist
+    const remaining = playlists.filter((p) => p.id !== activePlaylistId);
+    if (remaining.length > 0) setActivePlaylistId(remaining[0].id);
+    setDeleteModalOpen(false);
+    showToast(`🗑️ Playlist deleted`);
+  };
+
   return (
     <main className="min-h-screen bg-white">
       <Header
-        title="My Playlist"
+        title={activePlaylist.name}
         showBack
         backHref="/dashboard"
-        onNewPlaylist={handleNewPlaylist}
+        onNewPlaylist={() => setNewPlaylistModalOpen(true)}
         onNewCategory={() => setCategoryModalOpen(true)}
       />
 
-      {/* View toggle */}
-      <div className="flex gap-2 px-6 py-3 border-b border-[#E5E7EB]">
+      {/* Playlist tabs bar */}
+      <div className="flex items-center gap-2 px-6 py-3 border-b border-[#E5E7EB] overflow-x-auto">
         <button
-          className={`btn ${viewMode === "master" ? "btn--primary" : "btn--ai"}`}
+          className={`btn rounded-full ${viewMode === "master" ? "btn--primary" : "btn--ai"}`}
           onClick={() => setViewMode("master")}
           aria-label="View Master Playlist"
         >
           Master ({mockMasterChannels.length})
         </button>
-        <button
-          className={`btn ${viewMode === "personal" ? "btn--primary" : "btn--ai"}`}
-          onClick={() => setViewMode("personal")}
-          aria-label="View My Playlist"
-        >
-          My List ({mockMyChannels.length})
-        </button>
+        {playlists.map((pl) => (
+          <button
+            key={pl.id}
+            className={`whitespace-nowrap min-h-[44px] px-5 rounded-full text-[14px] font-medium border-2 transition-all ${
+              pl.id === activePlaylistId
+                ? "border-[#2563EB] bg-[#EFF6FF] text-[#2563EB]"
+                : "border-[#E5E7EB] bg-[#F8F9FA] text-[#5F6368]"
+            }`}
+            onClick={() => setActivePlaylistId(pl.id)}
+            aria-label={`Switch to ${pl.name}`}
+            style={pl.color ? { borderLeftColor: pl.color, borderLeftWidth: 4 } : undefined}
+          >
+            <span
+              className="inline-block w-2.5 h-2.5 rounded-full mr-1.5"
+              style={{ backgroundColor: pl.color || '#9AA0A6' }}
+            />
+            {pl.name} ({pl.channelIds.length})
+          </button>
+        ))}
+        {canDelete && (
+          <button
+            className="whitespace-nowrap min-h-[44px] w-[44px] flex items-center justify-center rounded-full text-[#DC2626] border-2 border-[#E5E7EB] bg-[#F8F9FA] hover:bg-[#FEF2F2] hover:border-[#DC2626] transition-all shrink-0"
+            onClick={() => setDeleteModalOpen(true)}
+            aria-label={`Delete ${activePlaylist.name}`}
+            title="Delete playlist"
+          >
+            🗑️
+          </button>
+        )}
         {customCategories.length > 0 && (
-          <span className="text-[14px] text-[#16A34A] self-center ml-2 font-medium">
-            +{customCategories.length} custom
+          <span className="text-[13px] text-[#16A34A] font-medium ml-2 whitespace-nowrap">
+            +{customCategories.length} cat
           </span>
         )}
       </div>
@@ -133,7 +221,8 @@ export default function PlaylistPage() {
           onSave={() => showToast("✅ Playlist saved")}
           onShowAiSuggestions={() => showToast("⚡ AI suggestions panel opened")}
           onCopyToMyPlaylist={(ids) => {
-            handleCopyFromMaster("all");
+            handleCopyToPlaylist(ids);
+            showToast(`✅ ${ids.length} channels added to "${activePlaylist.name}"`);
           }}
           onAssignCategory={(cat, ids) => handleAssignCategory(cat, ids)}
           onAddCategoriesToPlaylist={() => setCopyCategoriesModalOpen(true)}
@@ -141,14 +230,26 @@ export default function PlaylistPage() {
       ) : (
         <PersonalPlaylistView
           masterChannels={mockMasterChannels}
-          myChannels={mockMyChannels}
+          myChannels={activeChannels}
+          activePlaylistName={activePlaylist.name}
+          activePlaylistColor={activePlaylist.color}
+          otherPlaylists={otherChannelsLists}
           aiConfidenceMap={mockAiConfidenceMap}
           smartSuggestResult={{
             channelIds: ["ch-011", "ch-012", "ch-014"],
             avgConfidence: 0.82,
           }}
-          onCopyFromMaster={handleCopyFromMaster}
-          onRemoveFromMyPlaylist={handleRemoveFromMyPlaylist}
+          onCopyFromMaster={(mode) => {
+            if (mode === "all") {
+              handleCopyToPlaylist(mockMasterChannels.map((c) => c.id));
+              showToast(`✅ All channels copied to "${activePlaylist.name}"`);
+            }
+          }}
+          onRemoveFromMyPlaylist={(channelId) => {
+            handleRemoveFromPlaylist(channelId);
+            const ch = mockMasterChannels.find((c) => c.id === channelId);
+            showToast(`"${ch?.name ?? "Channel"}" removed from "${activePlaylist.name}"`);
+          }}
         />
       )}
 
@@ -169,6 +270,21 @@ export default function PlaylistPage() {
           </button>
         </div>
       )}
+
+      <NewPlaylistModal
+        open={newPlaylistModalOpen}
+        onClose={() => setNewPlaylistModalOpen(false)}
+        onCreate={handleNewPlaylist}
+      />
+
+      <ConfirmDeleteModal
+        open={deleteModalOpen}
+        title={`Delete "${activePlaylist.name}"?`}
+        message={`Are you sure you want to delete "${activePlaylist.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        onConfirm={handleDeletePlaylist}
+        onCancel={() => setDeleteModalOpen(false)}
+      />
 
       <NewCategoryModal
         open={categoryModalOpen}
