@@ -98,6 +98,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
   const [masterCategory, setMasterCategory] = useState<string>('All');
   const [playlistCategory, setPlaylistCategory] = useState<string>('All');
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [menuSide, setMenuSide] = useState<'master' | 'mine'>('master');
   const lastClickedRef = useRef<number>(-1);
   const catScrollRef = useRef<HTMLDivElement>(null);
   const playlistCatScrollRef = useRef<HTMLDivElement>(null);
@@ -135,14 +136,25 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
     el.scrollBy({ left: dir === 'left' ? -200 : 200, behavior: 'smooth' });
   };
 
-  const handleMenuOpen = (channelId: string) => {
+  const handleMenuOpen = (channelId: string, side?: 'master' | 'mine') => {
     setMenuOpenId(menuOpenId === channelId ? null : channelId);
+    if (side) setMenuSide(side);
   };
 
   const handleMenuAction = (action: string, channelId: string) => {
+    const masterCh = masterChannels.find((c) => c.id === channelId);
     setMenuOpenId(null);
     if (action === 'remove' && onRemoveFromMyPlaylist) {
       onRemoveFromMyPlaylist(channelId);
+    }
+    if (action === 'addWithCategory' && masterCh) {
+      const cat = masterCh.groupTitle || masterCh.group;
+      if (cat) {
+        // Add channel + create/add to category in playlist
+        onCopyFromMaster('all', [channelId], cat);
+      } else {
+        onCopyFromMaster('all', [channelId]);
+      }
     }
   };
 
@@ -271,7 +283,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
                       channel={ch}
                       inMyPlaylist={true}
                       onToggle={onToggleChannel}
-                      onMenuOpen={handleMenuOpen}
+                      onMenuOpen={(id) => handleMenuOpen(id, 'mine')}
                     />
                   ))}
                 </div>
@@ -291,7 +303,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
               selected={side === 'master' ? selectedMasterIds.has(ch.id) : false}
               onSelect={side === 'master' ? handleSelectMaster : undefined}
               onToggle={onToggleChannel}
-              onMenuOpen={handleMenuOpen}
+              onMenuOpen={(id) => handleMenuOpen(id, side)}
             />
           ))
         )}
@@ -306,9 +318,16 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
       {menuOpenId && (
         <div className="two-pane__menu-overlay" onClick={() => setMenuOpenId(null)}>
           <div className="two-pane__menu" onClick={(e) => e.stopPropagation()}>
-            <button className="two-pane__menu-item" onClick={() => handleMenuAction('remove', menuOpenId)}>
-              🗑️ Remove from playlist
-            </button>
+            {menuSide === 'master' && (
+              <button className="two-pane__menu-item" onClick={() => handleMenuAction('addWithCategory', menuOpenId)}>
+                ➕ Add channel &amp; category to playlist
+              </button>
+            )}
+            {menuSide === 'mine' && (
+              <button className="two-pane__menu-item two-pane__menu-item--danger" onClick={() => handleMenuAction('remove', menuOpenId)}>
+                🗑️ Remove from playlist
+              </button>
+            )}
           </div>
         </div>
       )}
