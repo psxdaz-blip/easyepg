@@ -16,13 +16,11 @@ export default function LandingPage() {
   const [error, setError] = useState("");
 
   const goNext = () => {
-    console.log('next clicked, current:', wordIndex);
     setDirection("right");
     setWordIndex((prev) => (prev + 1) % WORDS.length);
   };
 
   const goPrev = () => {
-    console.log('prev clicked, current:', wordIndex);
     setDirection("left");
     setWordIndex((prev) => (prev - 1 + WORDS.length) % WORDS.length);
   };
@@ -60,7 +58,7 @@ export default function LandingPage() {
 
       <section className="landing__hero">
         <div className="landing__carousel">
-          <button className="landing__arrow" onMouseDown={goPrev} aria-label="Previous">‹</button>
+          <button type="button" className="landing__arrow" onClick={goPrev} aria-label="Previous">‹</button>
           <div className="landing__track">
             {WORDS.map((w, i) => (
               <span
@@ -75,7 +73,7 @@ export default function LandingPage() {
               </span>
             ))}
           </div>
-          <button className="landing__arrow" onMouseDown={goNext} aria-label="Next">›</button>
+          <button type="button" className="landing__arrow" onClick={goNext} aria-label="Next">›</button>
         </div>
 
         <form onSubmit={handleSubmit} className="landing__form">
