@@ -421,6 +421,8 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
           background: var(--bg-card, #F8F9FA);
           border-radius: var(--card-border-radius, 20px);
           padding: var(--card-padding, 20px);
+          min-width: 0;
+          overflow: hidden;
         }
         .two-pane__pane-title {
           font-size: var(--font-h2, 22px);
