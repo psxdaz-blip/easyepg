@@ -58,9 +58,7 @@ export default function LandingPage() {
 
       <section className="landing__hero">
         <div className="landing__carousel">
-          <button className="landing__arrow" onClick={goPrev} aria-label="Previous">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-          </button>
+          <button className="landing__arrow" onClick={goPrev} aria-label="Previous">‹</button>
           <div className="landing__track">
             {WORDS.map((w, i) => (
               <span
@@ -68,17 +66,14 @@ export default function LandingPage() {
                 className="landing__word"
                 style={{
                   opacity: i === wordIndex ? 1 : 0,
-                  transform: i === wordIndex ? "translateX(0) rotate(0)" : `translateX(${direction === "right" ? "80px" : "-80px"}) rotate(${direction === "right" ? "8deg" : "-8deg"})`,
-                  filter: i === wordIndex ? "blur(0)" : "blur(10px)",
+                  transform: i === wordIndex ? "translateX(0)" : `translateX(${direction === "right" ? "80px" : "-80px"})`,
                 }}
               >
                 {w}
               </span>
             ))}
           </div>
-          <button className="landing__arrow" onClick={goNext} aria-label="Next">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
-          </button>
+          <button className="landing__arrow" onClick={goNext} aria-label="Next">›</button>
         </div>
 
         <form onSubmit={handleSubmit} className="landing__form">
@@ -207,20 +202,23 @@ export default function LandingPage() {
         }
         .landing__arrow {
           flex-shrink: 0;
-          width: 52px;
-          height: 52px;
+          width: 56px;
+          height: 56px;
           border-radius: 50%;
           border: 1.5px solid rgba(255,255,255,0.08);
           background: rgba(255,255,255,0.03);
           color: rgba(255,255,255,0.3);
+          font-size: 28px;
+          font-weight: 300;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: all 250ms;
+          transition: border-color 200ms, color 200ms, background 200ms;
+          line-height: 1;
+          user-select: none;
         }
         .landing__arrow:hover { border-color: #D2FF00; color: #D2FF00; background: rgba(210,255,0,0.08); }
-        .landing__arrow:active { transform: scale(0.9); }
         .landing__form {
           display: flex;
           flex-direction: column;
@@ -280,7 +278,7 @@ export default function LandingPage() {
         @media (max-width: 640px) {
           .landing { padding: 16px; }
           .landing__track { width: 180px; }
-          .landing__arrow { width: 44px; height: 44px; }
+          .landing__arrow { width: 48px; height: 48px; font-size: 24px; }
         }
       `}</style>
     </main>
