@@ -21,6 +21,8 @@ interface Playlist {
   channelIds: string[];
   color?: string;
   customCategories?: string[];
+  /** channelId → category name overrides */
+  categoryOverrides?: Record<string, string>;
 }
 
 const PLAYLIST_COLORS = [
@@ -48,12 +50,17 @@ export default function PlaylistPage() {
 
   // Multi-playlist management
   const [playlists, setPlaylists] = useState<Playlist[]>([
-    { id: "pl_default", name: "My Playlist", channelIds: mockMyChannels.map((c) => c.id), color: '#D2FF00', customCategories: [] },
+    { id: "pl_default", name: "My Playlist", channelIds: mockMyChannels.map((c) => c.id), color: '#D2FF00', customCategories: [], categoryOverrides: {} },
   ]);
   const [activePlaylistId, setActivePlaylistId] = useState("pl_default");
 
   const activePlaylist = playlists.find((p) => p.id === activePlaylistId) || playlists[0];
-  const activeChannels = mockMasterChannels.filter((c) => activePlaylist.channelIds.includes(c.id));
+  const activeChannels = mockMasterChannels
+    .filter((c) => activePlaylist.channelIds.includes(c.id))
+    .map((c) => {
+      const override = activePlaylist.categoryOverrides?.[c.id];
+      return override ? { ...c, groupTitle: override, group: override } : c;
+    });
 
   const allCategories = useMemo(() => {
     const cats = new Set<string>();
@@ -81,19 +88,23 @@ export default function PlaylistPage() {
     setPlaylists((prev) => {
       const usedColors = new Set(prev.map((p) => p.color).filter(Boolean));
       const color = PLAYLIST_COLORS.find((c) => !usedColors.has(c)) || PLAYLIST_COLORS[prev.length % PLAYLIST_COLORS.length];
-      return [...prev, { id, name, channelIds: [], color }];
+      return [...prev, { id, name, channelIds: [], color, categoryOverrides: {} }];
     });
     setActivePlaylistId(id);
     showToast(`✅ "${name}" created — add channels from Master`);
   };
 
-  const handleCopyToPlaylist = useCallback((channelIds: string[]) => {
+  const handleCopyToPlaylist = useCallback((channelIds: string[], targetCategory?: string) => {
     setPlaylists((prev) =>
-      prev.map((p) =>
-        p.id === activePlaylistId
-          ? { ...p, channelIds: [...new Set([...p.channelIds, ...channelIds])] }
-          : p
-      )
+      prev.map((p) => {
+        if (p.id !== activePlaylistId) return p;
+        const newIds = [...new Set([...p.channelIds, ...channelIds])];
+        const newOverrides = { ...(p.categoryOverrides || {}) };
+        if (targetCategory) {
+          channelIds.forEach((id) => { newOverrides[id] = targetCategory; });
+        }
+        return { ...p, channelIds: newIds, categoryOverrides: newOverrides };
+      })
     );
   }, [activePlaylistId]);
 
@@ -247,10 +258,11 @@ export default function PlaylistPage() {
             channelIds: ["ch-011", "ch-012", "ch-014"],
             avgConfidence: 0.82,
           }}
-          onCopyFromMaster={(mode, channelIds) => {
+          onCopyFromMaster={(mode, channelIds, targetCategory) => {
             if (mode === "all" && channelIds) {
-              handleCopyToPlaylist(channelIds);
-              showToast(`✅ ${channelIds.length} channels copied to "${activePlaylist.name}"`);
+              handleCopyToPlaylist(channelIds, targetCategory);
+              const label = targetCategory ? ` into "${targetCategory}"` : '';
+              showToast(`✅ ${channelIds.length} channels copied to "${activePlaylist.name}"${label}`);
             }
           }}
           onRemoveFromMyPlaylist={(channelId) => {

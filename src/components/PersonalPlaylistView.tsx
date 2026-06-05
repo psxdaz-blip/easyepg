@@ -36,7 +36,7 @@ export interface PersonalPlaylistViewProps {
   /** Smart suggest result: AI‑picked channel IDs + avg confidence */
   smartSuggestResult?: { channelIds: string[]; avgConfidence: number } | null;
   /** Called when user initiates a copy */
-  onCopyFromMaster: (mode: CopyMode, channelIds?: string[]) => void;
+  onCopyFromMaster: (mode: CopyMode, channelIds?: string[], targetCategory?: string) => void;
   onRemoveFromMyPlaylist: (channelId: string) => void;
   onToggleChannel?: (channelId: string, enabled: boolean) => void;
   /** Returns true when the viewport is narrow */
@@ -155,7 +155,8 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
     e.preventDefault();
     const channelId = e.dataTransfer.getData('text/plain');
     if (channelId) {
-      onCopyFromMaster('all', [channelId]);
+      const targetCat = playlistCategory !== 'All' ? playlistCategory : undefined;
+      onCopyFromMaster('all', [channelId], targetCat);
     }
   };
 
