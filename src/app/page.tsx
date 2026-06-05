@@ -52,13 +52,6 @@ export default function LandingPage() {
           </div>
           <button type="button" className="landing__arrow" onClick={() => setWordIndex(1)} aria-label="Next">›</button>
         </div>
-              >
-                {w}
-              </span>
-            ))}
-          </div>
-          <button type="button" className="landing__arrow" onClick={goNext} aria-label="Next">›</button>
-        </div>
 
         <form onSubmit={handleSubmit} className="landing__form">
           <input
