@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -15,15 +15,15 @@ export default function LandingPage() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
 
-  const goNext = useCallback(() => {
+  const goNext = () => {
     setDirection("right");
-    setWordIndex((prev) => (prev + 1) % WORDS.length);
-  }, []);
+    setWordIndex(wordIndex === 0 ? 1 : 0);
+  };
 
-  const goPrev = useCallback(() => {
+  const goPrev = () => {
     setDirection("left");
-    setWordIndex((prev) => (prev - 1 + WORDS.length) % WORDS.length);
-  }, []);
+    setWordIndex(wordIndex === 0 ? 1 : 0);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,13 +177,15 @@ export default function LandingPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 16px;
+          gap: 8px;
           margin-bottom: 48px;
+          width: 100%;
+          max-width: 500px;
         }
         .landing__track {
           position: relative;
           height: 1.2em;
-          width: 320px;
+          flex: 1;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -278,6 +280,7 @@ export default function LandingPage() {
         @media (max-width: 640px) {
           .landing { padding: 16px; }
           .landing__track { width: 180px; }
+          .landing__carousel { gap: 4px; }
           .landing__arrow { width: 48px; height: 48px; font-size: 24px; }
         }
       `}</style>
