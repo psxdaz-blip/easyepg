@@ -1,13 +1,19 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 const WORDS = ["Login", "Register"];
 
 export default function LandingPage() {
+  const router = useRouter();
   const [wordIndex, setWordIndex] = useState(0);
   const [direction, setDirection] = useState<"left" | "right">("right");
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
 
   const goNext = useCallback(() => {
     setDirection("right");
@@ -18,6 +24,27 @@ export default function LandingPage() {
     setDirection("left");
     setWordIndex((prev) => (prev - 1 + WORDS.length) % WORDS.length);
   }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth/send-magic-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error("Failed to send");
+      setSent(true);
+      setTimeout(() => router.push(`/verify?email=${encodeURIComponent(email)}`), 1200);
+    } catch {
+      setError("Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <main className="landing">
@@ -32,7 +59,7 @@ export default function LandingPage() {
       <section className="landing__hero">
         <div className="landing__carousel">
           <button className="landing__arrow" onClick={goPrev} aria-label="Previous">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
           <div className="landing__track">
             {WORDS.map((w, i) => (
@@ -50,11 +77,30 @@ export default function LandingPage() {
             ))}
           </div>
           <button className="landing__arrow" onClick={goNext} aria-label="Next">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
           </button>
         </div>
 
-        <p className="landing__tagline">Your TV channels, all in one link.</p>
+        <form onSubmit={handleSubmit} className="landing__form">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email"
+            aria-label="Enter your email"
+            required
+            className="landing__input"
+          />
+          <button
+            type="submit"
+            disabled={sent || loading}
+            className="landing__submit"
+          >
+            {loading ? "Sending..." : sent ? "✉️ Check your inbox" : "Continue"}
+          </button>
+        </form>
+
+        {error && <p className="landing__error">{error}</p>}
 
         <div className="landing__apps">
           {["TiviMate", "IPTV Smarters", "VLC", "Plex", "Jellyfin"].map((app) => (
@@ -64,13 +110,6 @@ export default function LandingPage() {
             </span>
           ))}
         </div>
-
-        <p className="landing__note">Works in any IPTV app · No setup required</p>
-
-        <Link href="/dashboard" className="landing__cta">
-          Get started
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </Link>
       </section>
 
       <style>{`
@@ -87,12 +126,12 @@ export default function LandingPage() {
         }
         .landing__glow {
           position: fixed;
-          width: 700px;
-          height: 700px;
+          width: 800px;
+          height: 800px;
           border-radius: 50%;
-          background: radial-gradient(circle, rgba(210,255,0,0.07) 0%, transparent 70%);
-          top: -250px;
-          right: -200px;
+          background: radial-gradient(circle, rgba(210,255,0,0.06) 0%, transparent 70%);
+          top: -300px;
+          right: -250px;
           pointer-events: none;
         }
         .landing__glow--2 {
@@ -102,11 +141,10 @@ export default function LandingPage() {
           left: -150px;
           top: auto;
           right: auto;
-          background: radial-gradient(circle, rgba(210,255,0,0.04) 0%, transparent 70%);
         }
         .landing__nav {
           width: 100%;
-          max-width: 1100px;
+          max-width: 500px;
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -116,7 +154,6 @@ export default function LandingPage() {
           font-size: 20px;
           font-weight: 700;
           color: #D2FF00;
-          letter-spacing: -0.5px;
         }
         .landing__nav-link {
           padding: 10px 20px;
@@ -137,7 +174,7 @@ export default function LandingPage() {
           justify-content: center;
           text-align: center;
           width: 100%;
-          max-width: 900px;
+          max-width: 500px;
           position: relative;
           z-index: 1;
         }
@@ -145,36 +182,36 @@ export default function LandingPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 12px;
-          margin-bottom: 40px;
+          gap: 16px;
+          margin-bottom: 48px;
         }
         .landing__track {
           position: relative;
-          height: 1.3em;
-          width: 420px;
+          height: 1.2em;
+          width: 320px;
           display: flex;
           align-items: center;
           justify-content: center;
         }
         .landing__word {
           position: absolute;
-          font-size: clamp(80px, 18vw, 150px);
+          font-size: clamp(64px, 15vw, 120px);
           font-weight: 900;
           color: #D2FF00;
-          letter-spacing: -0.05em;
-          transition: opacity 450ms cubic-bezier(0.22, 1, 0.36, 1), transform 450ms cubic-bezier(0.22, 1, 0.36, 1), filter 450ms ease;
+          letter-spacing: -0.04em;
+          transition: opacity 400ms cubic-bezier(0.22, 1, 0.36, 1), transform 400ms cubic-bezier(0.22, 1, 0.36, 1), filter 400ms ease;
           white-space: nowrap;
           line-height: 1;
-          text-shadow: 0 0 150px rgba(210,255,0,0.12);
+          text-shadow: 0 0 120px rgba(210,255,0,0.1);
           user-select: none;
         }
         .landing__arrow {
           flex-shrink: 0;
-          width: 48px;
-          height: 48px;
+          width: 52px;
+          height: 52px;
           border-radius: 50%;
-          border: 1.5px solid rgba(255,255,255,0.06);
-          background: rgba(255,255,255,0.02);
+          border: 1.5px solid rgba(255,255,255,0.08);
+          background: rgba(255,255,255,0.03);
           color: rgba(255,255,255,0.3);
           cursor: pointer;
           display: flex;
@@ -182,22 +219,51 @@ export default function LandingPage() {
           justify-content: center;
           transition: all 250ms;
         }
-        .landing__arrow:hover { border-color: rgba(210,255,0,0.3); color: #D2FF00; background: rgba(210,255,0,0.05); }
+        .landing__arrow:hover { border-color: #D2FF00; color: #D2FF00; background: rgba(210,255,0,0.08); }
         .landing__arrow:active { transform: scale(0.9); }
-        .landing__tagline {
-          font-size: clamp(15px, 2vw, 19px);
-          color: rgba(255,255,255,0.35);
-          font-weight: 400;
-          margin: 0 0 32px;
-          letter-spacing: 0.2px;
-          line-height: 1.4;
+        .landing__form {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          width: 100%;
+          margin-bottom: 24px;
         }
+        .landing__input {
+          width: 100%;
+          min-height: 56px;
+          padding: 0 20px;
+          border-radius: 14px;
+          border: 1.5px solid rgba(255,255,255,0.08);
+          background: rgba(255,255,255,0.04);
+          color: #fff;
+          font-size: 16px;
+          outline: none;
+          transition: border-color 200ms;
+          box-sizing: border-box;
+        }
+        .landing__input::placeholder { color: rgba(255,255,255,0.25); }
+        .landing__input:focus { border-color: #D2FF00; }
+        .landing__submit {
+          width: 100%;
+          min-height: 56px;
+          border-radius: 14px;
+          border: none;
+          background: #D2FF00;
+          color: #111112;
+          font-size: 17px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: transform 200ms, box-shadow 200ms;
+        }
+        .landing__submit:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(210,255,0,0.2); }
+        .landing__submit:active { transform: scale(0.97); }
+        .landing__submit:disabled { opacity: 0.5; cursor: default; transform: none; box-shadow: none; }
+        .landing__error { font-size: 13px; color: #FF6B6B; margin: -8px 0 16px; }
         .landing__apps {
           display: flex;
           flex-wrap: wrap;
           justify-content: center;
           gap: 8px;
-          margin-bottom: 16px;
         }
         .landing__app {
           display: inline-flex;
@@ -211,32 +277,10 @@ export default function LandingPage() {
           font-weight: 500;
           border: 1px solid rgba(255,255,255,0.05);
         }
-        .landing__note {
-          font-size: 12px;
-          color: rgba(255,255,255,0.18);
-          margin: 0 0 28px;
-          letter-spacing: 0.3px;
-        }
-        .landing__cta {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          padding: 16px 40px;
-          border-radius: 14px;
-          background: #D2FF00;
-          color: #111112;
-          font-size: 17px;
-          font-weight: 700;
-          text-decoration: none;
-          transition: transform 200ms, box-shadow 200ms;
-        }
-        .landing__cta:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(210,255,0,0.25); }
-        .landing__cta:active { transform: scale(0.97); }
         @media (max-width: 640px) {
           .landing { padding: 16px; }
-          .landing__track { width: 200px; }
-          .landing__arrow { width: 40px; height: 40px; }
-          .landing__cta { width: 100%; justify-content: center; }
+          .landing__track { width: 180px; }
+          .landing__arrow { width: 44px; height: 44px; }
         }
       `}</style>
     </main>
