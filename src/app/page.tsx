@@ -160,7 +160,7 @@ export default function LandingPage() {
           display: block;
           width: 100%;
           text-align: center;
-          font-size: clamp(40px, 12vw, 90px);
+          font-size: clamp(48px, 18vw, 130px);
           font-weight: 900;
           color: rgba(210,255,0,0.15);
           letter-spacing: -0.03em;
