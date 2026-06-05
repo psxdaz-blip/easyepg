@@ -165,11 +165,11 @@ export default function LandingPage() {
           color: rgba(210,255,0,0.15);
           letter-spacing: -0.03em;
           white-space: nowrap;
-          line-height: 1.2;
+          line-height: 1;
           cursor: pointer;
           transition: color 200ms ease;
           user-select: none;
-          padding: 12px 20px;
+          padding: 6px 20px;
           box-sizing: border-box;
         }
         .landing__word--active {
