@@ -4,26 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-const WORDS = ["Login", "Register"];
-
 export default function LandingPage() {
   const router = useRouter();
   const [wordIndex, setWordIndex] = useState(0);
-  const [direction, setDirection] = useState<"left" | "right">("right");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
-
-  const goNext = () => {
-    setDirection("right");
-    setWordIndex((prev) => (prev + 1) % WORDS.length);
-  };
-
-  const goPrev = () => {
-    setDirection("left");
-    setWordIndex((prev) => (prev - 1 + WORDS.length) % WORDS.length);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,16 +45,13 @@ export default function LandingPage() {
 
       <section className="landing__hero">
         <div className="landing__carousel">
-          <button type="button" className="landing__arrow" onClick={goPrev} aria-label="Previous">‹</button>
+          <button type="button" className="landing__arrow" onClick={() => setWordIndex(0)} aria-label="Previous">‹</button>
           <div className="landing__track">
-            {WORDS.map((w, i) => (
-              <span
-                key={w}
-                className="landing__word"
-                style={{
-                  opacity: i === wordIndex ? 1 : 0,
-                  transform: i === wordIndex ? "translateX(0)" : `translateX(${direction === "right" ? "80px" : "-80px"})`,
-                }}
+            <span className="landing__word" style={{ opacity: wordIndex === 0 ? 1 : 0 }}>Login</span>
+            <span className="landing__word" style={{ opacity: wordIndex === 1 ? 1 : 0 }}>Register</span>
+          </div>
+          <button type="button" className="landing__arrow" onClick={() => setWordIndex(1)} aria-label="Next">›</button>
+        </div>
               >
                 {w}
               </span>
@@ -196,7 +180,7 @@ export default function LandingPage() {
           font-weight: 900;
           color: #D2FF00;
           letter-spacing: -0.04em;
-          transition: opacity 400ms cubic-bezier(0.22, 1, 0.36, 1), transform 400ms cubic-bezier(0.22, 1, 0.36, 1), filter 400ms ease;
+          transition: opacity 300ms ease;
           white-space: nowrap;
           line-height: 1;
           text-shadow: 0 0 120px rgba(210,255,0,0.1);
