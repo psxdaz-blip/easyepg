@@ -45,11 +45,8 @@ export default function LandingPage() {
 
       <section className="landing__hero">
         <div className="landing__carousel">
-          <button type="button" className="landing__arrow" onClick={() => setWordIndex(0)} aria-label="Previous">&lt;</button>
           <span className={`landing__word${wordIndex === 0 ? ' landing__word--active' : ''}`} onClick={() => setWordIndex(0)}>Login</span>
-          <span className="landing__divider" />
           <span className={`landing__word${wordIndex === 1 ? ' landing__word--active' : ''}`} onClick={() => setWordIndex(1)}>Register</span>
-          <button type="button" className="landing__arrow" onClick={() => setWordIndex(1)} aria-label="Next">&gt;</button>
         </div>
 
         <form onSubmit={handleSubmit} className="landing__form">
@@ -148,23 +145,22 @@ export default function LandingPage() {
           max-width: 500px;
           position: relative;
           z-index: 1;
+          margin: auto;
         }
         .landing__carousel {
           display: flex;
+          flex-direction: column;
           align-items: center;
-          justify-content: center;
-          gap: 12px;
+          gap: 0;
           margin-bottom: 48px;
-          width: 100%;
-          max-width: 500px;
         }
         .landing__word {
-          font-size: clamp(48px, 10vw, 80px);
+          font-size: clamp(56px, 12vw, 100px);
           font-weight: 900;
-          color: rgba(210,255,0,0.2);
+          color: rgba(210,255,0,0.15);
           letter-spacing: -0.03em;
           white-space: nowrap;
-          line-height: 1;
+          line-height: 1.1;
           cursor: pointer;
           transition: color 200ms ease;
           user-select: none;
@@ -173,29 +169,6 @@ export default function LandingPage() {
           color: #D2FF00;
           text-shadow: 0 0 80px rgba(210,255,0,0.15);
         }
-        .landing__divider {
-          width: 2px;
-          height: 0.6em;
-          background: rgba(210,255,0,0.15);
-          border-radius: 1px;
-          flex-shrink: 0;
-        }
-        .landing__arrow {
-          flex-shrink: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: none;
-          background: none;
-          color: rgba(255,255,255,0.2);
-          font-size: 40px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: color 200ms;
-          line-height: 1;
-          padding: 0 4px;
-        }
-        .landing__arrow:hover { color: #D2FF00; }
         .landing__form {
           display: flex;
           flex-direction: column;
