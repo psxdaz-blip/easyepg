@@ -170,11 +170,7 @@ export default function LandingPage() {
           transition: color 200ms ease;
           user-select: none;
           padding: 12px 20px;
-          border-radius: 14px;
           box-sizing: border-box;
-        }
-        .landing__word:hover {
-          background: rgba(210,255,0,0.04);
         }
         .landing__word--active {
           color: #D2FF00;
