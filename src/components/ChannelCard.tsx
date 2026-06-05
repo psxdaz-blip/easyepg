@@ -253,6 +253,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
         .channel-card__info {
           flex: 1;
           min-width: 0;
+          overflow: hidden;
         }
         .channel-card__name-row {
           display: flex;
@@ -264,6 +265,10 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
           font-size: var(--font-base, 16px);
           font-weight: 600;
           color: var(--text-primary, #1A1A1A);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          min-width: 0;
         }
         .channel-card__ai-badge {
           font-size: var(--font-tiny, 12px);
@@ -273,17 +278,24 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
           padding: 2px 10px;
           border-radius: 20px;
           white-space: nowrap;
+          flex-shrink: 0;
         }
         .channel-card__next {
           margin: 2px 0 0;
           font-size: var(--font-small, 14px);
           color: var(--text-secondary, #5F6368);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
           line-height: var(--line-height, 1.6);
         }
         .channel-card__group {
           margin: 0;
           font-size: var(--font-tiny, 12px);
           color: var(--text-muted, #9AA0A6);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
         .channel-card__menu {
           display: flex;

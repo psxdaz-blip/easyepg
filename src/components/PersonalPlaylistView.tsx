@@ -348,7 +348,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
         }
         @media (min-width: 900px) {
           .two-pane__grid {
-            grid-template-columns: 380px 1fr;
+            grid-template-columns: 1fr 1fr;
           }
         }
         .two-pane__right {
