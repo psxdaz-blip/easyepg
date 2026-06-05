@@ -45,12 +45,11 @@ export default function LandingPage() {
 
       <section className="landing__hero">
         <div className="landing__carousel">
-          <button type="button" className="landing__arrow" onClick={() => setWordIndex(0)} aria-label="Previous">‹</button>
-          <div className="landing__track">
-            <span className="landing__word" style={{ opacity: wordIndex === 0 ? 1 : 0 }}>Login</span>
-            <span className="landing__word" style={{ opacity: wordIndex === 1 ? 1 : 0 }}>Register</span>
-          </div>
-          <button type="button" className="landing__arrow" onClick={() => setWordIndex(1)} aria-label="Next">›</button>
+          <button type="button" className="landing__arrow" onClick={() => setWordIndex(0)} aria-label="Previous">&lt;</button>
+          <span className={`landing__word${wordIndex === 0 ? ' landing__word--active' : ''}`} onClick={() => setWordIndex(0)}>Login</span>
+          <span className="landing__divider" />
+          <span className={`landing__word${wordIndex === 1 ? ' landing__word--active' : ''}`} onClick={() => setWordIndex(1)}>Register</span>
+          <button type="button" className="landing__arrow" onClick={() => setWordIndex(1)} aria-label="Next">&gt;</button>
         </div>
 
         <form onSubmit={handleSubmit} className="landing__form">
@@ -154,50 +153,51 @@ export default function LandingPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 8px;
+          gap: 12px;
           margin-bottom: 48px;
           width: 100%;
           max-width: 500px;
         }
-        .landing__track {
-          position: relative;
-          height: 1.2em;
-          flex: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
         .landing__word {
-          position: absolute;
-          font-size: clamp(64px, 15vw, 120px);
+          font-size: clamp(48px, 10vw, 80px);
           font-weight: 900;
-          color: #D2FF00;
-          letter-spacing: -0.04em;
-          transition: opacity 300ms ease;
+          color: rgba(210,255,0,0.2);
+          letter-spacing: -0.03em;
           white-space: nowrap;
           line-height: 1;
-          text-shadow: 0 0 120px rgba(210,255,0,0.1);
+          cursor: pointer;
+          transition: color 200ms ease;
           user-select: none;
+        }
+        .landing__word--active {
+          color: #D2FF00;
+          text-shadow: 0 0 80px rgba(210,255,0,0.15);
+        }
+        .landing__divider {
+          width: 2px;
+          height: 0.6em;
+          background: rgba(210,255,0,0.15);
+          border-radius: 1px;
+          flex-shrink: 0;
         }
         .landing__arrow {
           flex-shrink: 0;
-          width: 56px;
-          height: 56px;
-          border-radius: 50%;
-          border: 1.5px solid rgba(255,255,255,0.08);
-          background: rgba(255,255,255,0.03);
-          color: rgba(255,255,255,0.3);
-          font-size: 28px;
-          font-weight: 300;
-          cursor: pointer;
+          width: 48px;
+          height: 48px;
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: border-color 200ms, color 200ms, background 200ms;
+          border: none;
+          background: none;
+          color: rgba(255,255,255,0.2);
+          font-size: 28px;
+          font-weight: 300;
+          cursor: pointer;
+          transition: color 200ms;
           line-height: 1;
-          user-select: none;
+          padding: 0;
         }
-        .landing__arrow:hover { border-color: #D2FF00; color: #D2FF00; background: rgba(210,255,0,0.08); }
+        .landing__arrow:hover { color: #D2FF00; }
         .landing__form {
           display: flex;
           flex-direction: column;
@@ -257,8 +257,7 @@ export default function LandingPage() {
         @media (max-width: 640px) {
           .landing { padding: 16px; }
           .landing__track { width: 180px; }
-          .landing__carousel { gap: 4px; }
-          .landing__arrow { width: 48px; height: 48px; font-size: 24px; }
+          .landing__arrow { font-size: 22px; }
         }
       `}</style>
     </main>
