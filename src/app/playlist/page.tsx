@@ -247,10 +247,10 @@ export default function PlaylistPage() {
             channelIds: ["ch-011", "ch-012", "ch-014"],
             avgConfidence: 0.82,
           }}
-          onCopyFromMaster={(mode) => {
-            if (mode === "all") {
-              handleCopyToPlaylist(mockMasterChannels.map((c) => c.id));
-              showToast(`✅ All channels copied to "${activePlaylist.name}"`);
+          onCopyFromMaster={(mode, channelIds) => {
+            if (mode === "all" && channelIds) {
+              handleCopyToPlaylist(channelIds);
+              showToast(`✅ ${channelIds.length} channels copied to "${activePlaylist.name}"`);
             }
           }}
           onRemoveFromMyPlaylist={(channelId) => {

@@ -87,6 +87,12 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
     }
   };
 
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData('text/plain', channel.id);
+    e.dataTransfer.effectAllowed = 'copy';
+    onDragStart?.(channel.id);
+  };
+
   return (
     <article
       id={`channel-card-${cardId}`}
@@ -103,14 +109,14 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
       onClick={handleClick}
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter' && selectable && onSelect) onSelect(channel.id, e.shiftKey); }}
+      draggable
+      onDragStart={handleDragStart}
     >
       {/* Drag handle — visual only */}
       <button
         className="channel-card__drag"
         aria-label={`Drag to reorder ${channel.name}`}
-        onMouseDown={() => onDragStart?.(channel.id)}
-        onKeyDown={(e) => { if (e.key === 'Enter') onDragStart?.(channel.id); }}
-        tabIndex={0}
+        tabIndex={-1}
       >
         <svg width="20" height="20" viewBox="0 0 20 20" fill="var(--text-muted)" aria-hidden="true">
           <circle cx="7" cy="5" r="1.5" />

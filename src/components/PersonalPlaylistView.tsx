@@ -36,7 +36,7 @@ export interface PersonalPlaylistViewProps {
   /** Smart suggest result: AI‑picked channel IDs + avg confidence */
   smartSuggestResult?: { channelIds: string[]; avgConfidence: number } | null;
   /** Called when user initiates a copy */
-  onCopyFromMaster: (mode: CopyMode, categories?: string[]) => void;
+  onCopyFromMaster: (mode: CopyMode, channelIds?: string[]) => void;
   onRemoveFromMyPlaylist: (channelId: string) => void;
   onToggleChannel?: (channelId: string, enabled: boolean) => void;
   /** Returns true when the viewport is narrow */
@@ -146,6 +146,19 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
     }
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const channelId = e.dataTransfer.getData('text/plain');
+    if (channelId) {
+      onCopyFromMaster('all', [channelId]);
+    }
+  };
+
   const handleSmartSuggest = () => {
     onCopyFromMaster('smart');
     if (smartSuggestResult) {
@@ -178,13 +191,16 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
 
   const handleAddSelected = () => {
     if (selectedMasterIds.size === 0) return;
-    // Convert to copy from master by passing selected IDs
-    onCopyFromMaster('all');
+    // Pass selected IDs directly
+    onCopyFromMaster('all', Array.from(selectedMasterIds));
     setSelectedMasterIds(new Set());
   };
 
-  const handleCopyAll = () => onCopyFromMaster('all');
-  const handleRemoveAll = () => myChannels.forEach((c) => onRemoveFromMyPlaylist(c.id));
+  const handleCopyAll = () => {
+    // Pass all visible (filtered) channel IDs
+    onCopyFromMaster('all', filteredMaster.map((c) => c.id));
+  };
+  const handleRemoveAll = () => filteredPlaylist.forEach((c) => onRemoveFromMyPlaylist(c.id));
 
   const masterCount = masterChannels.length;
   const myCount = myChannels.length;
@@ -202,7 +218,11 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
     const scrollRef = side === 'master' ? catScrollRef : playlistCatScrollRef;
 
     return (
-    <div className={`two-pane__pane two-pane__pane--${side}`}>
+    <div
+      className={`two-pane__pane two-pane__pane--${side}`}
+      onDragOver={side === 'mine' ? handleDragOver : undefined}
+      onDrop={side === 'mine' ? handleDrop : undefined}
+    >
       <h2 className="two-pane__pane-title">
         {title}
         <span className="two-pane__pane-count"> ({displayCount})</span>
