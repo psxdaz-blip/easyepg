@@ -146,11 +146,11 @@ export default function LandingPage() {
           align-items: center;
           justify-content: center;
           gap: 12px;
-          margin-bottom: 24px;
+          margin-bottom: 40px;
         }
         .landing__track {
           position: relative;
-          height: 1em;
+          height: 1.3em;
           width: 420px;
           display: flex;
           align-items: center;
@@ -158,7 +158,7 @@ export default function LandingPage() {
         }
         .landing__word {
           position: absolute;
-          font-size: clamp(80px, 20vw, 180px);
+          font-size: clamp(80px, 18vw, 150px);
           font-weight: 900;
           color: #D2FF00;
           letter-spacing: -0.05em;
@@ -185,11 +185,12 @@ export default function LandingPage() {
         .landing__arrow:hover { border-color: rgba(210,255,0,0.3); color: #D2FF00; background: rgba(210,255,0,0.05); }
         .landing__arrow:active { transform: scale(0.9); }
         .landing__tagline {
-          font-size: clamp(15px, 2.5vw, 20px);
+          font-size: clamp(15px, 2vw, 19px);
           color: rgba(255,255,255,0.35);
           font-weight: 400;
-          margin: 0 0 28px;
+          margin: 0 0 32px;
           letter-spacing: 0.2px;
+          line-height: 1.4;
         }
         .landing__apps {
           display: flex;
