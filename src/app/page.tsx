@@ -182,20 +182,18 @@ export default function LandingPage() {
         }
         .landing__arrow {
           flex-shrink: 0;
-          width: 48px;
-          height: 48px;
           display: flex;
           align-items: center;
           justify-content: center;
           border: none;
           background: none;
           color: rgba(255,255,255,0.2);
-          font-size: 28px;
-          font-weight: 300;
+          font-size: 40px;
+          font-weight: 700;
           cursor: pointer;
           transition: color 200ms;
           line-height: 1;
-          padding: 0;
+          padding: 0 4px;
         }
         .landing__arrow:hover { color: #D2FF00; }
         .landing__form {
@@ -257,7 +255,7 @@ export default function LandingPage() {
         @media (max-width: 640px) {
           .landing { padding: 16px; }
           .landing__track { width: 180px; }
-          .landing__arrow { font-size: 22px; }
+          .landing__arrow { font-size: 32px; }
         }
       `}</style>
     </main>
