@@ -1,6 +1,6 @@
 // PersonalPlaylistView.tsx — two‑pane Master → My Playlist copy flow with Copy All and Smart Suggest
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import ChannelCard, { type Channel } from './ChannelCard';
 
 /* ─── Helpers ─── */
@@ -27,6 +27,8 @@ export interface PersonalPlaylistViewProps {
   activePlaylistName?: string;
   /** Color of the active personal playlist */
   activePlaylistColor?: string;
+  /** Custom category headers for this playlist */
+  playlistCategories?: string[];
   /** Other playlists to show on the right side (for multi-playlist view) */
   otherPlaylists?: Array<{ id: string; name: string; color?: string; channels: Channel[] }>;
   /** Mock AI confidence map for master channels */
@@ -88,11 +90,34 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
   otherPlaylists = [],
   activePlaylistName = 'My Playlist',
   activePlaylistColor = '',
+  playlistCategories = [],
   isMobile = false,
 }) => {
   const [showSuggestModal, setShowSuggestModal] = useState(false);
   const [selectedMasterIds, setSelectedMasterIds] = useState<Set<string>>(new Set());
+  const [masterCategory, setMasterCategory] = useState<string>('All');
   const lastClickedRef = useRef<number>(-1);
+  const catScrollRef = useRef<HTMLDivElement>(null);
+
+  // Extract unique categories from master channels
+  const masterCategories = useMemo(() => {
+    const cats = new Set<string>();
+    masterChannels.forEach((c) => { if (c.groupTitle || c.group) cats.add(c.groupTitle || c.group!); });
+    return ['All', ...Array.from(cats).sort()];
+  }, [masterChannels]);
+
+  // Filtered master channels by selected category
+  const filteredMaster = useMemo(() => {
+    if (masterCategory === 'All') return masterChannels;
+    return masterChannels.filter((c) => (c.groupTitle || c.group) === masterCategory);
+  }, [masterChannels, masterCategory]);
+
+  const scrollCategory = (dir: 'left' | 'right') => {
+    const el = catScrollRef.current;
+    if (!el) return;
+    const scrollAmount = 200;
+    el.scrollBy({ left: dir === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+  };
 
   const handleSmartSuggest = () => {
     onCopyFromMaster('smart');
@@ -141,38 +166,69 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
   const pane = (title: string, chs: Channel[], count: number, side: 'master' | 'mine') => {
     // Group "mine" channels by category
     const grouped = side === 'mine' ? groupByCategory(chs) : null;
+    // Use filtered channels for master
+    const displayChs = side === 'master' ? filteredMaster : chs;
+    const displayCount = side === 'master' ? filteredMaster.length : count;
 
     return (
     <div className={`two-pane__pane two-pane__pane--${side}`}>
       <h2 className="two-pane__pane-title">
         {title}
-        <span className="two-pane__pane-count"> ({count})</span>
+        <span className="two-pane__pane-count"> ({displayCount})</span>
         {side === 'master' && selectedCount > 0 && (
           <span className="two-pane__selected-badge">{selectedCount} selected</span>
         )}
       </h2>
+
+      {/* Category carousel — master only */}
+      {side === 'master' && (
+        <div className="two-pane__cat-carousel">
+          <button className="two-pane__cat-arrow" onClick={() => scrollCategory('left')} aria-label="Previous category">‹</button>
+          <div className="two-pane__cat-scroll" ref={catScrollRef}>
+            {masterCategories.map((cat) => (
+              <button
+                key={cat}
+                className={`two-pane__cat-pill${masterCategory === cat ? ' two-pane__cat-pill--active' : ''}`}
+                onClick={() => setMasterCategory(cat)}
+              >
+                {cat}
+                {cat !== 'All' && (
+                  <span className="two-pane__cat-count">{masterChannels.filter((c) => (c.groupTitle || c.group) === cat).length}</span>
+                )}
+              </button>
+            ))}
+          </div>
+          <button className="two-pane__cat-arrow" onClick={() => scrollCategory('right')} aria-label="Next category">›</button>
+        </div>
+      )}
+
       <div className="two-pane__pane-list" role="list" aria-label={`${title} channels`}>
         {side === 'mine' && grouped ? (
-          // Render with category headers
-          Array.from(grouped.entries()).map(([cat, catChs]) => (
-            <div key={cat} className="two-pane__cat-group">
-              <div className="two-pane__cat-header">{cat}</div>
-              {catChs.map((ch) => (
-                <ChannelCard
-                  key={ch.id}
-                  channel={ch}
-                  aiConfidence={aiConfidenceMap?.[ch.id]?.confidence}
-                  aiAutoApplied={aiConfidenceMap?.[ch.id]?.autoApplied}
-                  inMyPlaylist={true}
-                  onToggle={onToggleChannel}
-                  onMenuOpen={(id) => console.log('Menu open:', id)}
-                />
-              ))}
-            </div>
-          ))
+          // Render with category headers (including empty custom categories)
+          <>
+            {playlistCategories.map((cat) => {
+              const catChs = grouped.get(cat) || [];
+              return (
+                <div key={cat} className="two-pane__cat-group">
+                  <div className="two-pane__cat-header">{cat} {catChs.length > 0 && <span className="two-pane__cat-count">({catChs.length})</span>}</div>
+                  {catChs.map((ch) => (
+                    <ChannelCard
+                      key={ch.id}
+                      channel={ch}
+                      aiConfidence={aiConfidenceMap?.[ch.id]?.confidence}
+                      aiAutoApplied={aiConfidenceMap?.[ch.id]?.autoApplied}
+                      inMyPlaylist={true}
+                      onToggle={onToggleChannel}
+                      onMenuOpen={(id) => console.log('Menu open:', id)}
+                    />
+                  ))}
+                </div>
+              );
+            })}
+          </>
         ) : (
-          // Flat list for master
-          chs.map((ch, i) => (
+          // Flat list for master (filtered by category)
+          displayChs.map((ch, i) => (
             <ChannelCard
               key={ch.id}
               channel={ch}
@@ -187,9 +243,9 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
             />
           ))
         )}
-        {chs.length === 0 && (
+        {displayChs.length === 0 && (
           <p className="two-pane__empty">
-            {side === 'master' ? 'No channels available.' : 'Your playlist is empty. Add channels from the Master list.'}
+            {side === 'master' ? 'No channels in this category.' : 'Your playlist is empty. Add channels from the Master list.'}
           </p>
         )}
       </div>
@@ -426,6 +482,71 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
           background: var(--accent-soft, #EFF6FF);
           border-radius: 8px 8px 0 0;
           margin-bottom: 2px;
+        }
+        /* ─── Master category carousel ─── */
+        .two-pane__cat-carousel {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-bottom: var(--space-md, 16px);
+        }
+        .two-pane__cat-scroll {
+          display: flex;
+          gap: 6px;
+          overflow-x: auto;
+          scrollbar-width: none;
+          flex: 1;
+        }
+        .two-pane__cat-scroll::-webkit-scrollbar { display: none; }
+        .two-pane__cat-arrow {
+          flex-shrink: 0;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          border: 1.5px solid rgba(0,0,0,0.08);
+          background: var(--bg, #FFFFFF);
+          color: var(--text-secondary, #5F6368);
+          font-size: 18px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 150ms ease;
+          line-height: 1;
+        }
+        .two-pane__cat-arrow:hover {
+          border-color: var(--accent, #2563EB);
+          color: var(--accent, #2563EB);
+        }
+        .two-pane__cat-pill {
+          white-space: nowrap;
+          padding: 6px 14px;
+          border-radius: 100px;
+          border: 1.5px solid rgba(0,0,0,0.06);
+          background: var(--bg-card, #F8F9FA);
+          color: var(--text-secondary, #5F6368);
+          font-size: 13px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 150ms ease;
+          flex-shrink: 0;
+        }
+        .two-pane__cat-pill:hover {
+          border-color: var(--accent, #2563EB);
+          color: var(--accent, #2563EB);
+        }
+        .two-pane__cat-pill--active {
+          background: var(--accent, #2563EB);
+          color: #FFFFFF;
+          border-color: var(--accent, #2563EB);
+        }
+        .two-pane__cat-count {
+          font-size: 11px;
+          opacity: 0.7;
+          margin-left: 4px;
+        }
+        .two-pane__cat-pill--active .two-pane__cat-count {
+          opacity: 0.8;
         }
         .two-pane__sticky-add,
         .two-pane__sticky-copy {

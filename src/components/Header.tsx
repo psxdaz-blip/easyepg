@@ -49,6 +49,13 @@ const Header: React.FC<HeaderProps> = ({
       {title && <h1 className="header__title">{title}</h1>}
 
       <div className="header__right">
+        {/* Desktop nav links */}
+        <nav className="header__nav">
+          <Link href="/playlist" className="header__nav-link">Playlist</Link>
+          <Link href="/epg" className="header__nav-link">EPG</Link>
+          <Link href="/settings" className="header__nav-link">Settings</Link>
+        </nav>
+
         {!hideActions && (
           <>
             {/* Desktop buttons */}
@@ -87,6 +94,16 @@ const Header: React.FC<HeaderProps> = ({
       {/* Mobile dropdown menu */}
       {menuOpen && !hideActions && (
         <div className="header__mobile-menu" role="menu">
+          <Link href="/playlist" className="header__mobile-link" role="menuitem" onClick={() => setMenuOpen(false)}>
+            Playlist
+          </Link>
+          <Link href="/epg" className="header__mobile-link" role="menuitem" onClick={() => setMenuOpen(false)}>
+            EPG
+          </Link>
+          <Link href="/settings" className="header__mobile-link" role="menuitem" onClick={() => setMenuOpen(false)}>
+            Settings
+          </Link>
+          <hr className="header__mobile-divider" />
           <button
             className="btn btn--primary btn--full header__mobile-btn"
             onClick={() => { onNewPlaylist?.(); setMenuOpen(false); }}
@@ -144,6 +161,26 @@ const Header: React.FC<HeaderProps> = ({
           display: flex;
           align-items: center;
           gap: var(--space-sm, 12px);
+        }
+        .header__nav {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+        .header__nav-link {
+          display: inline-flex;
+          align-items: center;
+          padding: 6px 14px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--text-secondary, #5F6368);
+          text-decoration: none;
+          transition: background 150ms ease, color 150ms ease;
+        }
+        .header__nav-link:hover {
+          background: var(--accent-soft, #EFF6FF);
+          color: var(--accent, #2563EB);
         }
         .header__desktop-actions {
           display: flex;
@@ -206,8 +243,29 @@ const Header: React.FC<HeaderProps> = ({
         .header__mobile-btn {
           min-height: 52px;
         }
+        .header__mobile-link {
+          display: block;
+          padding: 12px 0;
+          font-size: 16px;
+          font-weight: 500;
+          color: var(--text-primary, #1A1A1A);
+          text-decoration: none;
+          border-radius: 8px;
+          transition: color 150ms ease;
+        }
+        .header__mobile-link:hover {
+          color: var(--accent, #2563EB);
+        }
+        .header__mobile-divider {
+          border: none;
+          border-top: 1px solid var(--border, #E5E7EB);
+          margin: 4px 0;
+        }
         @media (max-width: 768px) {
           .header__desktop-actions {
+            display: none;
+          }
+          .header__nav {
             display: none;
           }
           .header__hamburger {

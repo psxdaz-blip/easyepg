@@ -20,6 +20,7 @@ interface Playlist {
   name: string;
   channelIds: string[];
   color?: string;
+  customCategories?: string[];
 }
 
 const PLAYLIST_COLORS = [
@@ -44,11 +45,10 @@ export default function PlaylistPage() {
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [copyCategoriesModalOpen, setCopyCategoriesModalOpen] = useState(false);
   const [pendingAssignIds, setPendingAssignIds] = useState<string[]>([]);
-  const [customCategories, setCustomCategories] = useState<string[]>([]);
 
   // Multi-playlist management
   const [playlists, setPlaylists] = useState<Playlist[]>([
-    { id: "pl_default", name: "My Playlist", channelIds: mockMyChannels.map((c) => c.id), color: '#D2FF00' },
+    { id: "pl_default", name: "My Playlist", channelIds: mockMyChannels.map((c) => c.id), color: '#D2FF00', customCategories: [] },
   ]);
   const [activePlaylistId, setActivePlaylistId] = useState("pl_default");
 
@@ -58,9 +58,9 @@ export default function PlaylistPage() {
   const allCategories = useMemo(() => {
     const cats = new Set<string>();
     mockMasterChannels.forEach((c) => { if (c.groupTitle) cats.add(c.groupTitle); });
-    customCategories.forEach((c) => cats.add(c));
+    (activePlaylist.customCategories || []).forEach((c) => cats.add(c));
     return Array.from(cats).sort();
-  }, [customCategories]);
+  }, [activePlaylist.customCategories]);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -108,8 +108,14 @@ export default function PlaylistPage() {
   }, [activePlaylistId]);
 
   const handleNewCategory = (name: string) => {
-    setCustomCategories((prev) => [...prev, name]);
-    showToast(`✅ Category "${name}" created`);
+    setPlaylists((prev) =>
+      prev.map((p) =>
+        p.id === activePlaylistId
+          ? { ...p, customCategories: [...(p.customCategories || []), name] }
+          : p
+      )
+    );
+    showToast(`✅ Category "${name}" added to "${activePlaylist.name}"`);
   };
 
   const handleAssignCategory = (category: string, channelIds: string[]) => {
@@ -132,10 +138,11 @@ export default function PlaylistPage() {
   };
 
   // Merge mock categories with custom ones for the filter rail
+  const playlistCats = activePlaylist.customCategories || [];
   const allChannels = [
     ...mockMasterChannels,
-    ...(customCategories.length > 0
-      ? customCategories.map((cat, i) => ({
+    ...(playlistCats.length > 0
+      ? playlistCats.map((cat, i) => ({
           id: `custom-cat-${i}`,
           name: cat,
           groupTitle: cat,
@@ -205,9 +212,9 @@ export default function PlaylistPage() {
             🗑️
           </button>
         )}
-        {customCategories.length > 0 && (
+        {(activePlaylist.customCategories?.length || 0) > 0 && (
           <span className="text-[13px] text-[#16A34A] font-medium ml-2 whitespace-nowrap">
-            +{customCategories.length} cat
+            +{activePlaylist.customCategories?.length || 0} cat
           </span>
         )}
       </div>
@@ -233,6 +240,7 @@ export default function PlaylistPage() {
           myChannels={activeChannels}
           activePlaylistName={activePlaylist.name}
           activePlaylistColor={activePlaylist.color}
+          playlistCategories={activePlaylist.customCategories || []}
           otherPlaylists={otherChannelsLists}
           aiConfidenceMap={mockAiConfidenceMap}
           smartSuggestResult={{
