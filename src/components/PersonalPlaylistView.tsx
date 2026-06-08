@@ -331,7 +331,9 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
         <button className="two-pane__cat-arrow" onClick={() => scrollCategory('right', scrollRef)} aria-label="Next category">›</button>
       </div>
 
-      <div className="two-pane__pane-list" role="list" aria-label={`${title} channels`}>
+      <div className="two-pane__pane-list" role="list" aria-label={`${title} channels`}
+        onDragOver={side === 'mine' ? handleDragOver : undefined}
+      >
         {side === 'mine' && activeCat === 'All' ? (
           // Render ALL categories for All view (custom + channel groupTitles)
           <>
@@ -347,6 +349,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
                       inMyPlaylist={true}
                       onToggle={onToggleChannel}
                       onMenuOpen={(id) => handleMenuOpen(id, 'mine')}
+                      onDragOver={handleDragOver}
                     />
                   ))}
                 </div>
@@ -364,6 +367,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
                       inMyPlaylist={true}
                       onToggle={onToggleChannel}
                       onMenuOpen={(id) => handleMenuOpen(id, 'mine')}
+                      onDragOver={handleDragOver}
                     />
                   ))}
                 </div>
@@ -384,6 +388,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
               onSelect={side === 'master' ? handleSelectMaster : undefined}
               onToggle={onToggleChannel}
               onMenuOpen={(id) => handleMenuOpen(id, side)}
+              onDragOver={side === 'mine' ? handleDragOver : undefined}
             />
           ))
         )}

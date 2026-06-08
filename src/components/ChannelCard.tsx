@@ -37,6 +37,7 @@ export interface ChannelCardProps {
   onToggle?: (channelId: string, enabled: boolean) => void;
   onMenuOpen?: (channelId: string) => void;
   onDragStart?: (channelId: string) => void;
+  onDragOver?: (e: React.DragEvent) => void;
 }
 
 /* ─── Helpers ─── */
@@ -72,6 +73,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
   onToggle,
   onMenuOpen,
   onDragStart,
+  onDragOver,
 }) => {
   const [enabled, setEnabled] = useState(true);
   const cardId = useId();
@@ -111,6 +113,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
       onKeyDown={(e) => { if (e.key === 'Enter' && selectable && onSelect) onSelect(channel.id, e.shiftKey); }}
       draggable
       onDragStart={handleDragStart}
+      onDragOver={onDragOver}
     >
       {/* Drag handle — visual only */}
       <button
