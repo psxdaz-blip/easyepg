@@ -218,21 +218,25 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
     const channelId = dragChannelRef.current || e.dataTransfer.getData('text/plain');
     if (!channelId) return;
     dragChannelRef.current = null;
-      // If the channel is already in the playlist, reorder it (drop to bottom)
-      if (onReorderPlaylist && myChannels.some((c) => c.id === channelId)) {
-        const ids = myChannels.map((c) => c.id);
-        const idx = ids.indexOf(channelId);
-        if (idx >= 0) {
-          ids.splice(idx, 1);
-          ids.push(channelId);
-          onReorderPlaylist(ids);
-        }
-        return;
+
+    // If the channel is already in the playlist, reorder it
+    if (onReorderPlaylist && myChannels.some((c) => c.id === channelId)) {
+      const ids = myChannels.map((c) => c.id);
+      const fromIdx = ids.indexOf(channelId);
+      if (fromIdx >= 0) {
+        ids.splice(fromIdx, 1);
+        const targetId = dropTargetRef.current;
+        const toIdx = targetId ? ids.indexOf(targetId) : -1;
+        ids.splice(toIdx >= 0 ? toIdx : ids.length, 0, channelId);
+        dropTargetRef.current = null;
+        onReorderPlaylist(ids);
       }
-      // Otherwise copy from master into selected category
-      const targetCat = playlistCategory !== 'All' ? playlistCategory : undefined;
-      onCopyFromMaster('all', [channelId], targetCat);
+      return;
     }
+
+    // Copy from master into selected category
+    const targetCat = playlistCategory !== 'All' ? playlistCategory : undefined;
+    onCopyFromMaster('all', [channelId], targetCat);
   };
 
   const handleSmartSuggest = () => {
