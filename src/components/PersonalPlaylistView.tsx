@@ -306,17 +306,6 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
                 </div>
               );
             })}
-                    <ChannelCard
-                      key={ch.id}
-                      channel={ch}
-                      inMyPlaylist={true}
-                      onToggle={onToggleChannel}
-                      onMenuOpen={(id) => handleMenuOpen(id, 'mine')}
-                    />
-                  ))}
-                </div>
-              );
-            })}
           </>
         ) : (
           // Flat list (filtered by category for both panes)
