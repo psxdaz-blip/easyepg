@@ -107,6 +107,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
   const playlistCatScrollRef = useRef<HTMLDivElement>(null);
   const dragCatRef = useRef<{ label: string; side: string } | null>(null);
   const dragChannelRef = useRef<string | null>(null);
+  const dropTargetRef = useRef<string | null>(null);
 
   // Extract unique categories from master channels
   const masterBase = useMemo(() => {
