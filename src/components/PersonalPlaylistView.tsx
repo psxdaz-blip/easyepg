@@ -377,6 +377,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
                       inMyPlaylist={true}
                       onToggle={onToggleChannel}
                       onMenuOpen={(id) => handleMenuOpen(id, 'mine')}
+                      onDragStart={(id) => { dragChannelRef.current = id; }}
                     />
                   ))}
                 </div>
@@ -397,6 +398,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
               onSelect={side === 'master' ? handleSelectMaster : undefined}
               onToggle={onToggleChannel}
               onMenuOpen={(id) => handleMenuOpen(id, side)}
+              onDragStart={(id) => { dragChannelRef.current = id; }}
             />
           ))
         )}
