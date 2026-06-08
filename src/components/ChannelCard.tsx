@@ -98,6 +98,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
   return (
     <article
       id={`channel-card-${cardId}`}
+      data-channel-id={channel.id}
       className={`
         channel-card
         ${selectable ? 'channel-card--selectable' : ''}

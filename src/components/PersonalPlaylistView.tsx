@@ -207,9 +207,11 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
     }
   };
 
-  const handleDragOver = (e: React.DragEvent, targetId?: string) => {
+  const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    if (targetId) dropTargetRef.current = targetId;
+    // Detect which card element is under the cursor
+    const el = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-channel-id]');
+    dropTargetRef.current = el?.getAttribute('data-channel-id') || null;
     const isReorder = dragChannelRef.current && myChannels.some((c) => c.id === dragChannelRef.current);
     e.dataTransfer.dropEffect = isReorder ? 'move' : 'copy';
   };
@@ -375,8 +377,6 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
                       inMyPlaylist={true}
                       onToggle={onToggleChannel}
                       onMenuOpen={(id) => handleMenuOpen(id, 'mine')}
-                      onDragOver={(e) => handleDragOver(e, ch.id)}
-                      onDragStart={(id) => { dragChannelRef.current = id; }}
                     />
                   ))}
                 </div>
@@ -397,8 +397,6 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
               onSelect={side === 'master' ? handleSelectMaster : undefined}
               onToggle={onToggleChannel}
               onMenuOpen={(id) => handleMenuOpen(id, side)}
-              onDragOver={side === 'mine' ? (e) => handleDragOver(e, ch.id) : undefined}
-              onDragStart={(id) => { dragChannelRef.current = id; }}
             />
           ))
         )}
