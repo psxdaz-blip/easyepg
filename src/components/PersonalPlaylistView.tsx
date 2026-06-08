@@ -238,7 +238,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
     >
       <h2 className="two-pane__pane-title">
         {title}
-        <span className="two-pane__pane-count"> ({displayCount})</span>
+        <span className="two-pane__pane-count"> ({count})</span>
         {side === 'master' && selectedCount > 0 && (
           <span className="two-pane__selected-badge">{selectedCount} selected</span>
         )}
@@ -270,7 +270,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
 
       <div className="two-pane__pane-list" role="list" aria-label={`${title} channels`}>
         {side === 'mine' && activeCat === 'All' ? (
-          // Render with category headers for All view
+          // Render ALL categories for All view (custom + channel groupTitles)
           <>
             {playlistCategories.map((cat) => {
               const catChs = grouped?.get(cat) || [];
@@ -278,6 +278,34 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
                 <div key={cat} className="two-pane__cat-group">
                   <div className="two-pane__cat-header">{cat} {catChs.length > 0 && <span className="two-pane__cat-count">({catChs.length})</span>}</div>
                   {catChs.map((ch) => (
+                    <ChannelCard
+                      key={ch.id}
+                      channel={ch}
+                      inMyPlaylist={true}
+                      onToggle={onToggleChannel}
+                      onMenuOpen={(id) => handleMenuOpen(id, 'mine')}
+                    />
+                  ))}
+                </div>
+              );
+            })}
+            {grouped && Array.from(grouped.entries()).map(([cat, catChs]) => {
+              if (playlistCategories.includes(cat)) return null; // already rendered above
+              return (
+                <div key={cat} className="two-pane__cat-group">
+                  <div className="two-pane__cat-header">{cat} <span className="two-pane__cat-count">({catChs.length})</span></div>
+                  {catChs.map((ch) => (
+                    <ChannelCard
+                      key={ch.id}
+                      channel={ch}
+                      inMyPlaylist={true}
+                      onToggle={onToggleChannel}
+                      onMenuOpen={(id) => handleMenuOpen(id, 'mine')}
+                    />
+                  ))}
+                </div>
+              );
+            })}
                     <ChannelCard
                       key={ch.id}
                       channel={ch}
