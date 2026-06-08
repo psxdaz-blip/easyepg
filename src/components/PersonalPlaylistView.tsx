@@ -99,24 +99,69 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
   const [playlistCategory, setPlaylistCategory] = useState<string>('All');
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [menuSide, setMenuSide] = useState<'master' | 'mine'>('master');
+  const [catOrder, setCatOrder] = useState<Record<string, string[]>>({});
   const lastClickedRef = useRef<number>(-1);
   const catScrollRef = useRef<HTMLDivElement>(null);
   const playlistCatScrollRef = useRef<HTMLDivElement>(null);
+  const dragCatRef = useRef<{ label: string; side: string } | null>(null);
 
   // Extract unique categories from master channels
-  const masterCategories = useMemo(() => {
+  const masterBase = useMemo(() => {
     const cats = new Set<string>();
     masterChannels.forEach((c) => { if (c.groupTitle || c.group) cats.add(c.groupTitle || c.group!); });
     return ['All', ...Array.from(cats).sort()];
   }, [masterChannels]);
 
+  // Master categories with drag order applied
+  const masterCategories = useMemo(() => {
+    const key = 'master';
+    const saved = catOrder[key];
+    if (saved && saved.length > 0) {
+      return ['All', ...saved.filter((c) => c !== 'All' && masterBase.includes(c))];
+    }
+    return masterBase;
+  }, [masterBase, catOrder]);
+
   // Categories for the playlist pane: from channel groupTitles + custom playlist categories
-  const playlistCategoriesAll = useMemo(() => {
+  const playlistBase = useMemo(() => {
     const cats = new Set<string>();
     myChannels.forEach((c) => { if (c.groupTitle || c.group) cats.add(c.groupTitle || c.group!); });
     playlistCategories.forEach((c) => cats.add(c));
     return ['All', ...Array.from(cats).sort()];
   }, [myChannels, playlistCategories]);
+
+  // Playlist categories with drag order applied
+  const playlistCategoriesAll = useMemo(() => {
+    const key = 'playlist';
+    const saved = catOrder[key];
+    if (saved && saved.length > 0) {
+      return ['All', ...saved.filter((c) => c !== 'All' && playlistBase.includes(c))];
+    }
+    return playlistBase;
+  }, [playlistBase, catOrder]);
+
+  const handleCatDragStart = (label: string, sideKey: string) => {
+    dragCatRef.current = { label, side: sideKey };
+  };
+
+  const handleCatDragOver = (e: React.DragEvent, targetLabel: string, sideKey: string) => {
+    e.preventDefault();
+    const drag = dragCatRef.current;
+    if (!drag || drag.side !== sideKey || drag.label === targetLabel) return;
+    // Reorder
+    setCatOrder((prev) => {
+      const key = sideKey;
+      const base = key === 'master' ? masterBase : playlistBase;
+      const current = prev[key] || base.filter((c) => c !== 'All');
+      const fromIdx = current.indexOf(drag.label);
+      const toIdx = current.indexOf(targetLabel);
+      if (fromIdx < 0 || toIdx < 0) return prev;
+      const next = [...current];
+      next.splice(fromIdx, 1);
+      next.splice(toIdx, 0, drag.label);
+      return { ...prev, [key]: next };
+    });
+  };
 
   // Filtered playlist channels by selected category
   const filteredPlaylist = useMemo(() => {
@@ -253,13 +298,16 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
               key={cat}
               className={`two-pane__cat-pill${activeCat === cat ? ' two-pane__cat-pill--active' : ''}`}
               onClick={() => setActiveCat(cat)}
+              draggable={cat !== 'All'}
+              onDragStart={() => handleCatDragStart(cat, side)}
+              onDragOver={(e) => handleCatDragOver(e, cat, side)}
             >
               {cat}
               {cat !== 'All' && (
                 <span className="two-pane__cat-count">
                   {side === 'master'
                     ? masterChannels.filter((c) => (c.groupTitle || c.group) === cat).length
-                    : (grouped?.get(cat)?.length || 0)}
+                    : myChannels.filter((c) => (c.groupTitle || c.group) === cat).length + (playlistCategories.includes(cat) && !myChannels.some((c) => (c.groupTitle || c.group) === cat) ? 0 : 0)}
                 </span>
               )}
             </button>
