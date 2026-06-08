@@ -270,6 +270,13 @@ export default function PlaylistPage() {
             const ch = mockMasterChannels.find((c) => c.id === channelId);
             showToast(`"${ch?.name ?? "Channel"}" removed from "${activePlaylist.name}"`);
           }}
+          onReorderPlaylist={(channelIds) => {
+            setPlaylists((prev) =>
+              prev.map((p) =>
+                p.id === activePlaylistId ? { ...p, channelIds } : p
+              )
+            );
+          }}
         />
       )}
 

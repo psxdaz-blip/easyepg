@@ -38,6 +38,7 @@ export interface PersonalPlaylistViewProps {
   /** Called when user initiates a copy */
   onCopyFromMaster: (mode: CopyMode, channelIds?: string[], targetCategory?: string) => void;
   onRemoveFromMyPlaylist: (channelId: string) => void;
+  onReorderPlaylist?: (channelIds: string[]) => void;
   onToggleChannel?: (channelId: string, enabled: boolean) => void;
   /** Returns true when the viewport is narrow */
   isMobile?: boolean;
@@ -86,6 +87,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
   smartSuggestResult = null,
   onCopyFromMaster,
   onRemoveFromMyPlaylist,
+  onReorderPlaylist,
   onToggleChannel,
   otherPlaylists = [],
   activePlaylistName = 'My Playlist',
@@ -104,6 +106,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
   const catScrollRef = useRef<HTMLDivElement>(null);
   const playlistCatScrollRef = useRef<HTMLDivElement>(null);
   const dragCatRef = useRef<{ label: string; side: string } | null>(null);
+  const dragChannelRef = useRef<string | null>(null);
 
   // Extract unique categories from master channels
   const masterBase = useMemo(() => {
@@ -132,7 +135,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
 
   // Playlist categories with drag order applied
   const playlistCategoriesAll = useMemo(() => {
-    const key = 'playlist';
+    const key = 'mine';
     const saved = catOrder[key];
     if (saved && saved.length > 0) {
       return ['All', ...saved.filter((c) => c !== 'All' && playlistBase.includes(c))];
@@ -212,6 +215,18 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
     e.preventDefault();
     const channelId = e.dataTransfer.getData('text/plain');
     if (channelId) {
+      // If the channel is already in the playlist, reorder it (drop to bottom)
+      if (onReorderPlaylist && myChannels.some((c) => c.id === channelId)) {
+        const ids = myChannels.map((c) => c.id);
+        const idx = ids.indexOf(channelId);
+        if (idx >= 0) {
+          ids.splice(idx, 1);
+          ids.push(channelId);
+          onReorderPlaylist(ids);
+        }
+        return;
+      }
+      // Otherwise copy from master into selected category
       const targetCat = playlistCategory !== 'All' ? playlistCategory : undefined;
       onCopyFromMaster('all', [channelId], targetCat);
     }
