@@ -206,15 +206,18 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
     }
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, targetId?: string) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'copy';
+    if (targetId) dropTargetRef.current = targetId;
+    const isReorder = dragChannelRef.current && myChannels.some((c) => c.id === dragChannelRef.current);
+    e.dataTransfer.dropEffect = isReorder ? 'move' : 'copy';
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    const channelId = e.dataTransfer.getData('text/plain');
-    if (channelId) {
+    const channelId = dragChannelRef.current || e.dataTransfer.getData('text/plain');
+    if (!channelId) return;
+    dragChannelRef.current = null;
       // If the channel is already in the playlist, reorder it (drop to bottom)
       if (onReorderPlaylist && myChannels.some((c) => c.id === channelId)) {
         const ids = myChannels.map((c) => c.id);
@@ -367,7 +370,8 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
                       inMyPlaylist={true}
                       onToggle={onToggleChannel}
                       onMenuOpen={(id) => handleMenuOpen(id, 'mine')}
-                      onDragOver={handleDragOver}
+                      onDragOver={(e) => handleDragOver(e, ch.id)}
+                      onDragStart={(id) => { dragChannelRef.current = id; }}
                     />
                   ))}
                 </div>
@@ -388,7 +392,8 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
               onSelect={side === 'master' ? handleSelectMaster : undefined}
               onToggle={onToggleChannel}
               onMenuOpen={(id) => handleMenuOpen(id, side)}
-              onDragOver={side === 'mine' ? handleDragOver : undefined}
+              onDragOver={side === 'mine' ? (e) => handleDragOver(e, ch.id) : undefined}
+              onDragStart={(id) => { dragChannelRef.current = id; }}
             />
           ))
         )}
