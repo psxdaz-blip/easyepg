@@ -341,34 +341,35 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
         }
         .channel-card__toggle {
           flex-shrink: 0;
-          width: 48px;
-          height: 28px;
-          border-radius: 14px;
-          border: 2px solid var(--border, #E5E7EB);
+          width: 52px;
+          height: 30px;
+          border-radius: 15px;
+          border: none;
           background: var(--border, #E5E7EB);
           cursor: pointer;
           position: relative;
-          transition: background 150ms ease, border-color 150ms ease;
-          min-width: var(--btn-min-width, 56px);
-          min-height: var(--btn-min-height, 56px);
+          transition: background 200ms ease;
+          box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+          padding: 0;
+          appearance: none;
         }
         .channel-card__toggle::after {
           content: '';
           position: absolute;
-          top: 2px;
-          left: 2px;
-          width: 20px;
-          height: 20px;
+          top: 3px;
+          left: 3px;
+          width: 24px;
+          height: 24px;
           border-radius: 50%;
           background: #fff;
-          transition: transform 150ms ease;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+          transition: transform 200ms ease;
         }
         .channel-card__toggle--on {
           background: var(--accent, #2563EB);
-          border-color: var(--accent, #2563EB);
         }
         .channel-card__toggle--on::after {
-          transform: translateX(20px);
+          transform: translateX(22px);
         }
         .channel-card__toggle:focus-visible {
           outline: 3px solid var(--focus-ring, #2563EB);
