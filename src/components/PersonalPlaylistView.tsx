@@ -221,8 +221,18 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    const channelId = e.dataTransfer.getData('text/plain');
-    if (!channelId) return;
+    const rawData = e.dataTransfer.getData('text/plain');
+    if (!rawData) return;
+
+    // Multi-drag from master (pipe-separated IDs): always copy all
+    if (rawData.includes('|')) {
+      const ids = rawData.split('|');
+      const targetCat = playlistCategory !== 'All' ? playlistCategory : undefined;
+      onCopyFromMaster('all', ids, targetCat);
+      return;
+    }
+
+    const channelId = rawData;
 
     // If the channel is already in the playlist, reorder to the end
     if (onReorderPlaylist && myChannels.some((c) => c.id === channelId)) {
@@ -394,6 +404,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
               inMyPlaylist={side === 'mine'}
               selectable={side === 'master'}
               selected={side === 'master' ? selectedMasterIds.has(ch.id) : false}
+              selectedIds={side === 'master' ? selectedMasterIds : undefined}
               onSelect={side === 'master' ? handleSelectMaster : undefined}
               onToggle={onToggleChannel}
               onMenuOpen={(id) => handleMenuOpen(id, side)}

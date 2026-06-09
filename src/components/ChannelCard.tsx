@@ -38,6 +38,8 @@ export interface ChannelCardProps {
   onMenuOpen?: (channelId: string) => void;
   onDragStart?: (channelId: string) => void;
   onDragOver?: (e: React.DragEvent) => void;
+  /** Set of ALL selected channel IDs (for multi-select drag) */
+  selectedIds?: Set<string>;
 }
 
 /* ─── Helpers ─── */
@@ -74,6 +76,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
   onMenuOpen,
   onDragStart,
   onDragOver,
+  selectedIds,
 }) => {
   const [enabled, setEnabled] = useState(true);
   const cardId = useId();
@@ -90,8 +93,14 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
   };
 
   const handleDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData('text/plain', channel.id);
-    e.dataTransfer.effectAllowed = 'copyMove';
+    // Multi-select drag: include all selected IDs when dragging a selected channel
+    if (selected && selectedIds && selectedIds.size > 1) {
+      e.dataTransfer.setData('text/plain', Array.from(selectedIds).join('|'));
+      e.dataTransfer.effectAllowed = 'copyMove';
+    } else {
+      e.dataTransfer.setData('text/plain', channel.id);
+      e.dataTransfer.effectAllowed = 'copyMove';
+    }
     onDragStart?.(channel.id);
   };
 
@@ -367,28 +376,45 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
           outline-offset: -2px;
         }
         .channel-card--selected {
-          background: var(--accent-soft, #EFF6FF) !important;
+          background: linear-gradient(135deg, var(--accent-soft, #EFF6FF) 0%, #FFFFFF 100%) !important;
           outline: 2px solid var(--accent, #2563EB);
           outline-offset: -2px;
           position: relative;
+          box-shadow: 0 0 0 1px rgba(37,99,235,0.08), 0 4px 16px rgba(37,99,235,0.12);
         }
         .channel-card--selected::before {
-          content: '✓';
+          content: '';
           position: absolute;
-          top: 8px;
-          left: 8px;
-          width: 28px;
-          height: 28px;
+          top: 6px;
+          left: 6px;
+          width: 32px;
+          height: 32px;
           background: var(--accent, #2563EB);
-          color: #FFFFFF;
           border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 14px;
-          font-weight: 700;
           z-index: 2;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+          box-shadow: 0 2px 8px rgba(37,99,235,0.3), 0 0 0 3px rgba(37,99,235,0.15);
+          animation: channel-select-pop 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .channel-card--selected::after {
+          content: '';
+          position: absolute;
+          top: 10px;
+          left: 13px;
+          width: 9px;
+          height: 15px;
+          border: solid #FFFFFF;
+          border-width: 0 3px 3px 0;
+          transform: rotate(45deg);
+          z-index: 3;
+          animation: channel-check-appear 200ms ease 100ms both;
+        }
+        @keyframes channel-select-pop {
+          0% { transform: scale(0); opacity: 0; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes channel-check-appear {
+          0% { opacity: 0; transform: rotate(45deg) scale(0.5); }
+          100% { opacity: 1; transform: rotate(45deg) scale(1); }
         }
       ` }} />
     </article>
