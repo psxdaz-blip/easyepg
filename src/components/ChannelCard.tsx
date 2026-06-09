@@ -181,6 +181,16 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
         )}
       </div>
 
+      {/* Selection checkmark */}
+      {selected && (
+        <div className="channel-card__check" aria-hidden="true">
+          <div className="channel-card__check-ring" />
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="4 12 9 17 20 6" />
+          </svg>
+        </div>
+      )}
+
       {/* Overflow menu */}
       <button
         className="channel-card__menu"
@@ -376,45 +386,53 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
           outline-offset: -2px;
         }
         .channel-card--selected {
-          background: linear-gradient(135deg, var(--accent-soft, #EFF6FF) 0%, #FFFFFF 100%) !important;
-          outline: 2px solid var(--accent, #2563EB);
-          outline-offset: -2px;
+          background: linear-gradient(135deg, #E8EEFF 0%, #FFFFFF 50%) !important;
           position: relative;
-          box-shadow: 0 0 0 1px rgba(37,99,235,0.08), 0 4px 16px rgba(37,99,235,0.12);
+          box-shadow:
+            inset 4px 0 0 0 var(--accent, #2563EB),
+            0 0 0 1px rgba(37,99,235,0.06),
+            0 4px 24px rgba(37,99,235,0.12);
         }
-        .channel-card--selected::before {
-          content: '';
-          position: absolute;
-          top: 6px;
-          left: 6px;
-          width: 32px;
-          height: 32px;
-          background: var(--accent, #2563EB);
+        .channel-card__check {
+          position: relative;
+          flex-shrink: 0;
+          width: 44px;
+          height: 44px;
           border-radius: 50%;
-          z-index: 2;
-          box-shadow: 0 2px 8px rgba(37,99,235,0.3), 0 0 0 3px rgba(37,99,235,0.15);
-          animation: channel-select-pop 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
+          background: var(--accent, #2563EB);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: check-bounce 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+          box-shadow: 0 3px 14px rgba(37,99,235,0.4);
         }
-        .channel-card--selected::after {
-          content: '';
+        .channel-card__check-ring {
           position: absolute;
-          top: 10px;
-          left: 13px;
-          width: 9px;
-          height: 15px;
-          border: solid #FFFFFF;
-          border-width: 0 3px 3px 0;
-          transform: rotate(45deg);
-          z-index: 3;
-          animation: channel-check-appear 200ms ease 100ms both;
+          inset: -4px;
+          border-radius: 50%;
+          border: 2.5px solid var(--accent, #2563EB);
+          opacity: 0;
+          animation: check-ring-pulse 1.5s ease-out 300ms infinite;
         }
-        @keyframes channel-select-pop {
+        .channel-card__check svg {
+          position: relative;
+          z-index: 1;
+          animation: check-draw 400ms ease-out 150ms both;
+          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
+        }
+        @keyframes check-bounce {
           0% { transform: scale(0); opacity: 0; }
+          60% { transform: scale(1.15); }
+          80% { transform: scale(0.95); }
           100% { transform: scale(1); opacity: 1; }
         }
-        @keyframes channel-check-appear {
-          0% { opacity: 0; transform: rotate(45deg) scale(0.5); }
-          100% { opacity: 1; transform: rotate(45deg) scale(1); }
+        @keyframes check-draw {
+          0% { stroke-dashoffset: 30; opacity: 0; }
+          100% { stroke-dashoffset: 0; opacity: 1; }
+        }
+        @keyframes check-ring-pulse {
+          0% { opacity: 0.6; transform: scale(1); }
+          100% { opacity: 0; transform: scale(1.4); }
         }
       ` }} />
     </article>
