@@ -55,8 +55,9 @@ export default function PlaylistPage() {
   const [activePlaylistId, setActivePlaylistId] = useState("pl_default");
 
   const activePlaylist = playlists.find((p) => p.id === activePlaylistId) || playlists[0];
-  const activeChannels = mockMasterChannels
-    .filter((c) => activePlaylist.channelIds.includes(c.id))
+  const activeChannels = activePlaylist.channelIds
+    .map((id) => mockMasterChannels.find((c) => c.id === id))
+    .filter((c): c is typeof mockMasterChannels[number] => c != null)
     .map((c) => {
       const override = activePlaylist.categoryOverrides?.[c.id];
       return override ? { ...c, groupTitle: override, group: override } : c;
