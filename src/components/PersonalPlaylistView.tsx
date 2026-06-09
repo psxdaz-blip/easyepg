@@ -197,10 +197,19 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
     if (action === 'addWithCategory' && masterCh) {
       const cat = masterCh.groupTitle || masterCh.group;
       if (cat) {
-        // Add channel + create/add to category in playlist
         onCopyFromMaster('all', [channelId], cat);
       } else {
         onCopyFromMaster('all', [channelId]);
+      }
+    }
+    if ((action === 'moveUp' || action === 'moveDown') && onReorderPlaylist) {
+      const ids = myChannels.map((c) => c.id);
+      const idx = ids.indexOf(channelId);
+      if (idx >= 0) {
+        ids.splice(idx, 1);
+        const newIdx = action === 'moveUp' ? Math.max(0, idx - 1) : Math.min(ids.length, idx + 1);
+        ids.splice(newIdx, 0, channelId);
+        onReorderPlaylist(ids);
       }
     }
   };
@@ -407,9 +416,18 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
               </button>
             )}
             {menuSide === 'mine' && (
-              <button className="two-pane__menu-item two-pane__menu-item--danger" onClick={() => handleMenuAction('remove', menuOpenId)}>
-                🗑️ Remove from playlist
-              </button>
+              <>
+                <button className="two-pane__menu-item" onClick={() => handleMenuAction('moveUp', menuOpenId)}>
+                  ↑ Move up
+                </button>
+                <button className="two-pane__menu-item" onClick={() => handleMenuAction('moveDown', menuOpenId)}>
+                  ↓ Move down
+                </button>
+                <div className="two-pane__menu-divider" />
+                <button className="two-pane__menu-item two-pane__menu-item--danger" onClick={() => handleMenuAction('remove', menuOpenId)}>
+                  🗑️ Remove from playlist
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -760,6 +778,14 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
         }
         .two-pane__menu-item--danger {
           color: #DC2626;
+        }
+        .two-pane__menu-item--danger:hover {
+          background: #FEF2F2;
+        }
+        .two-pane__menu-divider {
+          border: none;
+          border-top: 1px solid #E5E7EB;
+          margin: 4px 0;
         }
 
         /* ─── Modal ─── */
