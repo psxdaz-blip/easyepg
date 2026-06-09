@@ -236,8 +236,9 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
       return;
     }
 
-    // Copy from master
-    onCopyFromMaster('all', [channelId]);
+    // Copy from master into selected category
+    const targetCat = playlistCategory !== 'All' ? playlistCategory : undefined;
+    onCopyFromMaster('all', [channelId], targetCat);
   };
 
   const handleSmartSuggest = () => {
