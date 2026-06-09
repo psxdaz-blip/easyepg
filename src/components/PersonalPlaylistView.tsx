@@ -343,6 +343,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
 
       <div className="two-pane__pane-list" role="list" aria-label={`${title} channels`}
         onDragOver={side === 'mine' ? handleDragOver : undefined}
+        onDrop={side === 'mine' ? handleDrop : undefined}
       >
         {side === 'mine' && activeCat === 'All' ? (
           // Render ALL categories for All view (custom + channel groupTitles)

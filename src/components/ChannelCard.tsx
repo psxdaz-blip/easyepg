@@ -91,7 +91,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
 
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData('text/plain', channel.id);
-    e.dataTransfer.effectAllowed = 'copy';
+    e.dataTransfer.effectAllowed = 'copyMove';
     onDragStart?.(channel.id);
   };
 
