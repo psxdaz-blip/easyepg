@@ -608,8 +608,6 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
           min-width: 0;
         }
         .two-pane__sheet--first {
-          outline: 3px solid var(--accent, #2563EB);
-          outline-offset: 2px;
           border-radius: 20px;
         }
         .two-pane__pane {
@@ -648,7 +646,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
         .two-pane__pane-list {
           display: flex;
           flex-direction: column;
-          gap: var(--space-xs, 8px);
+          gap: 10px;
           max-height: 60vh;
           overflow-y: auto;
           margin-bottom: var(--space-md, 16px);
