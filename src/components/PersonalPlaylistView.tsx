@@ -106,8 +106,6 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
   const catScrollRef = useRef<HTMLDivElement>(null);
   const playlistCatScrollRef = useRef<HTMLDivElement>(null);
   const dragCatRef = useRef<{ label: string; side: string } | null>(null);
-  const dragChannelRef = useRef<string | null>(null);
-  const dropTargetRef = useRef<string | null>(null);
 
   // Extract unique categories from master channels
   const masterBase = useMemo(() => {
@@ -209,37 +207,28 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    // Detect which card element is under the cursor
-    const el = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-channel-id]');
-    dropTargetRef.current = el?.getAttribute('data-channel-id') || null;
-    const isReorder = dragChannelRef.current && myChannels.some((c) => c.id === dragChannelRef.current);
-    e.dataTransfer.dropEffect = isReorder ? 'move' : 'copy';
+    e.dataTransfer.dropEffect = 'move';
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    const channelId = dragChannelRef.current || e.dataTransfer.getData('text/plain');
+    const channelId = e.dataTransfer.getData('text/plain');
     if (!channelId) return;
-    dragChannelRef.current = null;
 
-    // If the channel is already in the playlist, reorder it
+    // If the channel is already in the playlist, reorder to the end
     if (onReorderPlaylist && myChannels.some((c) => c.id === channelId)) {
       const ids = myChannels.map((c) => c.id);
-      const fromIdx = ids.indexOf(channelId);
-      if (fromIdx >= 0) {
-        ids.splice(fromIdx, 1);
-        const targetId = dropTargetRef.current;
-        const toIdx = targetId ? ids.indexOf(targetId) : -1;
-        ids.splice(toIdx >= 0 ? toIdx : ids.length, 0, channelId);
-        dropTargetRef.current = null;
+      const idx = ids.indexOf(channelId);
+      if (idx >= 0) {
+        ids.splice(idx, 1);
+        ids.push(channelId);
         onReorderPlaylist(ids);
       }
       return;
     }
 
-    // Copy from master into selected category
-    const targetCat = playlistCategory !== 'All' ? playlistCategory : undefined;
-    onCopyFromMaster('all', [channelId], targetCat);
+    // Copy from master
+    onCopyFromMaster('all', [channelId]);
   };
 
   const handleSmartSuggest = () => {
@@ -378,7 +367,6 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
                       inMyPlaylist={true}
                       onToggle={onToggleChannel}
                       onMenuOpen={(id) => handleMenuOpen(id, 'mine')}
-                      onDragStart={(id) => { dragChannelRef.current = id; }}
                     />
                   ))}
                 </div>
@@ -399,7 +387,6 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
               onSelect={side === 'master' ? handleSelectMaster : undefined}
               onToggle={onToggleChannel}
               onMenuOpen={(id) => handleMenuOpen(id, side)}
-              onDragStart={(id) => { dragChannelRef.current = id; }}
             />
           ))
         )}
