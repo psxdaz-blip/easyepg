@@ -47,10 +47,8 @@ export interface ChannelCardProps {
 const confidenceColor = (c: number): string =>
   c >= 0.85 ? 'var(--success)' : c >= 0.75 ? 'var(--warning)' : 'var(--text-muted)';
 
-const confidenceLabel = (c: number, auto: boolean): string => {
-  if (auto) return `🤖 Auto‑applied (${Math.round(c * 100)}%)`;
-  return `🤖 ${Math.round(c * 100)}%`;
-};
+const confidenceLabel = (c: number): string =>
+  `🤖 ${Math.round(c * 100)}%`;
 
 const formatTime = (iso: string): string => {
   try {
@@ -165,9 +163,9 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
             <span
               className="channel-card__ai-badge"
               style={{ '--badge-color': confidenceColor(aiConfidence) } as React.CSSProperties}
-              aria-label={`AI ${aiAutoApplied ? 'auto-applied' : 'suggestion'}, confidence ${Math.round(aiConfidence * 100)} percent`}
+              aria-label={`AI suggestion, confidence ${Math.round(aiConfidence * 100)} percent`}
             >
-              {confidenceLabel(aiConfidence, aiAutoApplied)}
+              {confidenceLabel(aiConfidence)}
             </span>
           )}
         </div>
@@ -181,7 +179,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
         )}
       </div>
 
-      {/* Selection checkmark */}
+      {/* Selection checkmark (absolutely positioned so text doesn't shift) */}
       {selected && (
         <div className="channel-card__check" aria-hidden="true">
           <div className="channel-card__check-ring" />
@@ -393,9 +391,15 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
             0 0 0 1px rgba(37,99,235,0.06),
             0 4px 24px rgba(37,99,235,0.12);
         }
+        .channel-card--selected .channel-card__info {
+          padding-right: 60px;
+        }
         .channel-card__check {
-          position: relative;
-          flex-shrink: 0;
+          position: absolute;
+          right: 80px;
+          top: 50%;
+          transform: translateY(-50%);
+          z-index: 5;
           width: 44px;
           height: 44px;
           border-radius: 50%;
