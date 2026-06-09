@@ -177,7 +177,7 @@ export default function PlaylistPage() {
   };
 
   return (
-    <main className="min-h-screen bg-white px-3">
+    <main className="min-h-screen bg-white">
       <Header
         title={activePlaylist.name}
         showBack

@@ -569,14 +569,14 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
       <style dangerouslySetInnerHTML={{ __html: `
         .two-pane {
           background: var(--bg, #FFFFFF);
-          padding: 24px 12px;
-          max-width: 1200px;
+          padding: 20px 4px;
+          max-width: 1400px;
           margin: 0 auto;
           min-height: 100vh;
         }
         @media (max-width: 600px) {
           .two-pane {
-            padding: 16px 8px;
+            padding: 12px 4px;
           }
         }
         .two-pane--mobile {
@@ -594,7 +594,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
         .two-pane__grid {
           display: grid;
           grid-template-columns: 1fr;
-          gap: var(--space-lg, 24px);
+          gap: var(--space-md, 16px);
           align-items: start;
         }
         @media (min-width: 900px) {
