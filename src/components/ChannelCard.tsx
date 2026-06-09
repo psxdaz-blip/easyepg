@@ -425,10 +425,10 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
           filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
         }
         @keyframes check-bounce {
-          0% { transform: scale(0); opacity: 0; }
-          60% { transform: scale(1.15); }
-          80% { transform: scale(0.95); }
-          100% { transform: scale(1); opacity: 1; }
+          0% { transform: translateY(-50%) scale(0); opacity: 0; }
+          60% { transform: translateY(-50%) scale(1.15); }
+          80% { transform: translateY(-50%) scale(0.95); }
+          100% { transform: translateY(-50%) scale(1); opacity: 1; }
         }
         @keyframes check-draw {
           0% { stroke-dashoffset: 30; opacity: 0; }
