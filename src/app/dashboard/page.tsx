@@ -105,6 +105,9 @@ export default function DashboardPage() {
           <span className="dash__logo-dot" />
         </div>
         <div className="dash__top-right">
+          {loadedSources.length === 0 && (
+            <Link href="/setup" className="dash__pill dash__pill--primary">Setup</Link>
+          )}
           <Link href="/playlist" className="dash__pill dash__pill--playlist">
             📺 Playlist
           </Link>

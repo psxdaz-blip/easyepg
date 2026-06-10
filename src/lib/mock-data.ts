@@ -1,5 +1,7 @@
 import type { Channel } from "@/components/ChannelCard";
 
+/* ─── Mock Master Channels ─── */
+
 export const mockMasterChannels: Channel[] = [
   { id: "ch-001", name: "BBC 1 HEVC HD", tvgName: "BBC 1 HEVC HD", tvgId: "bbc1.uk", groupTitle: "GENERAL ʰᵉᵛᶜ", logoUrl: "https://logo.m3uassets.com/bbc1.png", streamUrl: "http://pro.ukglobal.store/live/fcfae39ab4/adbb05ede5/717682.ts", nextProgram: { title: "Live Broadcast", startTime: "2026-06-04T20:00:00Z" } },
   { id: "ch-002", name: "BBC 2 HEVC HD", tvgName: "BBC 2 HEVC HD", tvgId: "bbc2.uk", groupTitle: "GENERAL ʰᵉᵛᶜ", logoUrl: "https://logo.m3uassets.com/bbc2.png", streamUrl: "http://pro.ukglobal.store/live/fcfae39ab4/adbb05ede5/717681.ts", nextProgram: { title: "Live Broadcast", startTime: "2026-06-04T20:00:00Z" } },
