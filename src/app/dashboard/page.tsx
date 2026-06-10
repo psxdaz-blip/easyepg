@@ -163,17 +163,24 @@ export default function DashboardPage() {
       <div className="dash__section">
         <div className="dash__section-header">
           <h2 className="dash__section-title">
-            {attentionChannels.length > 0 ? `⚠️ ${attentionChannels.length} need attention` : '✅ All good'}
+            {!hasEpgData ? '⚠️ No EPG sources configured' :
+             attentionChannels.length > 0 ? `⚠️ ${attentionChannels.length} need attention` : '✅ All good'}
           </h2>
-          <Link href="/playlist" className="dash__pill dash__pill--primary">
-            Fix in Playlist
-          </Link>
+          {hasEpgData && attentionChannels.length > 0 && (
+            <Link href="/playlist" className="dash__pill dash__pill--primary">
+              Fix in Playlist
+            </Link>
+          )}
         </div>
-        {attentionChannels.length > 0 ? (
+        {!hasEpgData ? (
+          <div className="dash__card dash__card--centered">
+            <p className="dash__empty-text">Add an XMLTV EPG source first.</p>
+            <p className="dash__empty-hint">EPG data will show which channels need attention.</p>
+          </div>
+        ) : attentionChannels.length > 0 ? (
           <div className="dash__card">
             <p className="dash__card-sub">
               These channels in your master playlist don&apos;t have EPG data yet.
-              Add an EPG source or match them manually.
             </p>
             <div className="dash__channel-list">
               {attentionChannels.slice(0, 10).map((ch) => (
