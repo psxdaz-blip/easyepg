@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import Header from "@/components/Header";
 import NewPlaylistModal from "@/components/NewPlaylistModal";
 import NewCategoryModal from "@/components/NewCategoryModal";
@@ -21,19 +21,24 @@ interface Playlist {
   channelIds: string[];
   color?: string;
   customCategories?: string[];
-  /** channelId → category name overrides */
   categoryOverrides?: Record<string, string>;
 }
 
+interface EpgSourceData {
+  id: string;
+  name: string;
+  url: string;
+  status: "loading" | "loaded" | "error";
+  channelCount: number;
+  entryCount: number;
+  addedAt: string;
+  channels?: Array<{ tvgId: string; displayName: string }>;
+}
+
+const EPG_COLORS = ['#D2FF00','#FF6B9D','#5BC0EB','#00C9A7','#FFD166','#FF8C42','#C084FC','#F472B6'];
 const PLAYLIST_COLORS = [
-  '#D2FF00', // neon green
-  '#FF6B9D', // pink
-  '#5BC0EB', // light blue
-  '#00C9A7', // aqua green
-  '#FFD166', // yellow
-  '#FF8C42', // orange
-  '#C084FC', // purple
-  '#F472B6', // rose
+  '#D2FF00', '#FF6B9D', '#5BC0EB', '#00C9A7',
+  '#FFD166', '#FF8C42', '#C084FC', '#F472B6',
 ];
 
 type ViewMode = "master" | "personal";
@@ -47,6 +52,65 @@ export default function PlaylistPage() {
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [copyCategoriesModalOpen, setCopyCategoriesModalOpen] = useState(false);
   const [pendingAssignIds, setPendingAssignIds] = useState<string[]>([]);
+  const [sources, setSources] = useState<EpgSourceData[]>([]);
+  /** channelId → sourceId override for EPG source */
+  const [epgOverrides, setEpgOverrides] = useState<Record<string, string>>({});
+
+  // Load EPG sources
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch("/api/epg/sources");
+        const data = await res.json();
+        setSources(data.sources || []);
+      } catch { /* silent */ }
+    };
+    load();
+    const interval = setInterval(load, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Compute EPG source map: channelId → { name, color }
+  const epgSourceMap = useMemo(() => {
+    const map: Record<string, { name: string; color: string }> = {};
+    const loaded = sources.filter((s) => s.status === "loaded");
+    loaded.forEach((src, idx) => {
+      const color = EPG_COLORS[idx % EPG_COLORS.length];
+      src.channels?.forEach((ch) => {
+        // Find matching mock channels by tvgId
+        mockMasterChannels.forEach((mc) => {
+          if ((mc.tvgId || mc.id) === ch.tvgId) {
+            // Use override if set, otherwise use first source that matches
+            if (!map[mc.id] || epgOverrides[mc.id] === src.id) {
+              map[mc.id] = { name: src.name, color };
+            }
+          }
+        });
+      });
+    });
+    // Apply any overrides that point to a different source
+    Object.entries(epgOverrides).forEach(([chId, srcId]) => {
+      const src = loaded.find((s) => s.id === srcId);
+      if (src) {
+        const idx = loaded.indexOf(src);
+        map[chId] = { name: src.name, color: EPG_COLORS[idx % EPG_COLORS.length] };
+      }
+    });
+    return map;
+  }, [sources, epgOverrides]);
+
+  const handleEpgSourceClick = useCallback((channelId: string) => {
+    const loaded = sources.filter((s) => s.status === "loaded");
+    if (loaded.length <= 1) return; // nothing to switch to
+    // Cycle to next source
+    const current = epgOverrides[channelId];
+    const currentIdx = loaded.findIndex((s) => s.id === current);
+    const nextIdx = (currentIdx + 1) % loaded.length;
+    const next = loaded[nextIdx];
+    setEpgOverrides((prev) => ({ ...prev, [channelId]: next.id }));
+    const ch = mockMasterChannels.find((c) => c.id === channelId);
+    showToast(`📡 ${ch?.name || 'Channel'} → ${next.name}`);
+  }, [sources, epgOverrides]);
 
   // Multi-playlist management
   const [playlists, setPlaylists] = useState<Playlist[]>([
@@ -278,6 +342,8 @@ export default function PlaylistPage() {
               )
             );
           }}
+          epgSourceMap={epgSourceMap}
+          onEpgSourceClick={handleEpgSourceClick}
         />
       )}
 

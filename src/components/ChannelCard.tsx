@@ -40,8 +40,12 @@ export interface ChannelCardProps {
   onDragOver?: (e: React.DragEvent) => void;
   onMoveUp?: (channelId: string) => void;
   onMoveDown?: (channelId: string) => void;
+  onEpgSourceClick?: (channelId: string) => void;
   /** Set of ALL selected channel IDs (for multi-select drag) */
   selectedIds?: Set<string>;
+  /** EPG source indicator */
+  epgSourceColor?: string;
+  epgSourceName?: string;
   /** Brief highlight flash after move */
   moving?: boolean;
 }
@@ -80,8 +84,11 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
   onDragOver,
   onMoveUp,
   onMoveDown,
+  onEpgSourceClick,
   selectedIds,
   moving,
+  epgSourceColor,
+  epgSourceName,
 }) => {
   const [enabled, setEnabled] = useState(true);
   const cardId = useId();
@@ -166,6 +173,15 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
       {/* Info */}
       <div className="channel-card__info">
         <div className="channel-card__name-row">
+          {epgSourceColor && (
+            <button
+              className="channel-card__epg-dot"
+              style={{ background: epgSourceColor, boxShadow: `0 0 6px ${epgSourceColor}40` }}
+              onClick={(e) => { e.stopPropagation(); onEpgSourceClick?.(channel.id); }}
+              aria-label={`EPG: ${epgSourceName || 'Unknown'}. Click to change.`}
+              title={`EPG: ${epgSourceName || 'Unknown'}`}
+            />
+          )}
           <span className="channel-card__name">{channel.name}</span>
           {aiConfidence !== undefined && (
             <span
@@ -329,6 +345,12 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
           gap: var(--space-xs, 8px);
           flex-wrap: wrap;
         }
+        .channel-card__epg-dot {
+          width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+          border: none; cursor: pointer; padding: 0;
+          transition: transform 150ms ease;
+        }
+        .channel-card__epg-dot:hover { transform: scale(1.4); }
         .channel-card__name {
           font-size: var(--font-base, 16px);
           font-weight: 600;

@@ -40,6 +40,9 @@ export interface PersonalPlaylistViewProps {
   onRemoveFromMyPlaylist: (channelId: string) => void;
   onReorderPlaylist?: (channelIds: string[]) => void;
   onToggleChannel?: (channelId: string, enabled: boolean) => void;
+  onEpgSourceClick?: (channelId: string) => void;
+  /** channelId → { name, color } for EPG source indicator */
+  epgSourceMap?: Record<string, { name: string; color: string }>;
   /** Returns true when the viewport is narrow */
   isMobile?: boolean;
 }
@@ -89,6 +92,8 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
   onRemoveFromMyPlaylist,
   onReorderPlaylist,
   onToggleChannel,
+  onEpgSourceClick,
+  epgSourceMap,
   otherPlaylists = [],
   activePlaylistName = 'My Playlist',
   activePlaylistColor = '',
@@ -418,6 +423,9 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
                       onDragOver={handleDragOver}
                       onMoveUp={handleMoveUp}
                       onMoveDown={handleMoveDown}
+                      epgSourceColor={epgSourceMap?.[ch.id]?.color}
+                      epgSourceName={epgSourceMap?.[ch.id]?.name}
+                      onEpgSourceClick={onEpgSourceClick}
                     />
                   ))}
                 </div>
@@ -437,6 +445,9 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
                       onMenuOpen={(id) => handleMenuOpen(id, 'mine')}
                       onMoveUp={handleMoveUp}
                       onMoveDown={handleMoveDown}
+                      epgSourceColor={epgSourceMap?.[ch.id]?.color}
+                      epgSourceName={epgSourceMap?.[ch.id]?.name}
+                      onEpgSourceClick={onEpgSourceClick}
                     />
                   ))}
                 </div>
@@ -461,6 +472,9 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
               onMoveUp={side === 'mine' ? handleMoveUp : undefined}
               onMoveDown={side === 'mine' ? handleMoveDown : undefined}
               moving={side === 'mine' ? ch.id === movingId : undefined}
+              epgSourceColor={side === 'mine' ? epgSourceMap?.[ch.id]?.color : undefined}
+              epgSourceName={side === 'mine' ? epgSourceMap?.[ch.id]?.name : undefined}
+              onEpgSourceClick={side === 'mine' ? onEpgSourceClick : undefined}
             />
           ))
         )}
