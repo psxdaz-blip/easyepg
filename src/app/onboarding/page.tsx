@@ -164,7 +164,7 @@ export default function OnboardingPage() {
           color: #E4E4E7;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
           display: flex; flex-direction: column; align-items: center;
-          justify-content: center; padding: 24px 16px;
+          justify-content: center; padding: 40px 24px;
         }
         .onb__steps { display: flex; gap: 8px; margin-bottom: 40px; }
         .onb__step {
@@ -177,7 +177,7 @@ export default function OnboardingPage() {
           background: #D2FF00;
         }
         .onb__content {
-          width: 100%; max-width: 480px;
+          width: 100%; max-width: 520px; margin: 0 auto;
           display: flex; flex-direction: column; gap: 16px;
         }
         .onb__content--center { align-items: center; text-align: center; }

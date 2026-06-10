@@ -391,7 +391,7 @@ export default function DashboardPage() {
         }
 
         /* ─── Section ─── */
-        .dash__section { margin-bottom: 20px; max-width: 960px; }
+        .dash__section { margin-bottom: 20px; }
         .dash__section-header {
           display: flex;
           align-items: center;

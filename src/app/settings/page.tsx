@@ -303,9 +303,7 @@ export default function SettingsPage() {
           min-height: 100vh;
           color: #E4E4E7;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-          padding: 16px 12px 100px;
-          max-width: 680px;
-          margin: 0 auto;
+          padding: 20px 24px 100px;
         }
         .set__top {
           display: flex; align-items: center; justify-content: space-between;
