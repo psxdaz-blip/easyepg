@@ -5,6 +5,8 @@ import Link from "next/link";
 import EpgMapperModal from "@/components/EpgMapperModal";
 import { mockMasterChannels } from "@/lib/mock-data";
 
+const EPG_COLORS = ['#D2FF00','#FF6B9D','#5BC0EB','#00C9A7','#FFD166','#FF8C42','#C084FC','#F472B6'];
+
 interface EpgSource {
   id: string;
   name: string;
@@ -132,12 +134,17 @@ export default function EpgPage() {
       )}
 
       <div className="epg__list">
-        {sources.map((src) => (
-          <div key={src.id} className="epg__card">
+        {sources.map((src, idx) => {
+          const color = EPG_COLORS[idx % EPG_COLORS.length];
+          return (
+          <div key={src.id} className="epg__card" style={{ borderLeftColor: color, borderLeftWidth: 3, borderLeftStyle: 'solid' }}>
             <div className="epg__src-head">
-              <div>
-                <h3 className="epg__card-title">{src.name}</h3>
-                <p className="epg__src-url">{src.url}</p>
+              <div className="epg__src-title-row">
+                <span className="epg__src-dot" style={{ background: color }} />
+                <div>
+                  <h3 className="epg__card-title">{src.name}</h3>
+                  <p className="epg__src-url">{src.url}</p>
+                </div>
               </div>
               <div className="epg__src-actions">
                 <span className={`epg__badge epg__badge--${src.status}`}>
@@ -154,7 +161,10 @@ export default function EpgPage() {
                 <p className="epg__src-meta">{src.channelCount} channels · {src.entryCount} entries</p>
                 <div className="epg__chip-row">
                   {src.channels.slice(0, 10).map((ch) => (
-                    <span key={ch.tvgId} className="epg__chip">{ch.displayName}</span>
+                    <span key={ch.tvgId} className="epg__chip">
+                      <span className="epg__chip-dot" style={{ background: color }} />
+                      {ch.displayName}
+                    </span>
                   ))}
                   {src.channels.length > 10 && <span className="epg__chip-more">+{src.channels.length - 10}</span>}
                 </div>
@@ -178,7 +188,7 @@ export default function EpgPage() {
               </div>
             )}
           </div>
-        ))}
+        );})}
       </div>
 
       {/* ─── Summary ─── */}
@@ -220,6 +230,9 @@ export default function EpgPage() {
         .epg__title { font-size: 24px; font-weight: 700; color: #FFFFFF; margin: 0; }
         .epg__card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 20px; }
         .epg__card--form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+        .epg__src-title-row { display: flex; align-items: center; gap: 10px; }
+        .epg__src-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 6px rgba(255,255,255,0.1); }
+        .epg__chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; display: inline-block; vertical-align: middle; margin-right: 4px; }
         .epg__card-title { font-size: 16px; font-weight: 600; color: #FFFFFF; margin: 0 0 4px; }
         .epg__btn {
           display: inline-flex; align-items: center; justify-content: center; gap: 6px;

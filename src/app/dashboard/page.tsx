@@ -5,6 +5,8 @@ import Link from "next/link";
 import { mockMasterChannels } from "@/lib/mock-data";
 import { epgStore } from "@/lib/epg-store";
 
+const EPG_COLORS = ['#D2FF00','#FF6B9D','#5BC0EB','#00C9A7','#FFD166','#FF8C42','#C084FC','#F472B6'];
+
 interface EpgSourceData {
   id: string;
   name: string;
@@ -215,28 +217,32 @@ export default function DashboardPage() {
 
         {loadedSources.length > 0 ? (
           <div className="dash__sources">
-            {loadedSources.map((src) => {
+            {loadedSources.map((src, idx) => {
+              const color = EPG_COLORS[idx % EPG_COLORS.length];
               const matchedChs = mockMasterChannels.filter((ch) =>
                 src.channels?.some((ec) => ec.tvgId === (ch.tvgId || ch.id))
               );
               return (
-                <div key={src.id} className="dash__card">
+                <div key={src.id} className="dash__card" style={{ borderLeftColor: color, borderLeftWidth: 3, borderLeftStyle: 'solid' }}>
                   <div className="dash__source-head">
-                    <div>
-                      <h3 className="dash__source-name">{src.name}</h3>
-                      <p className="dash__source-meta">
-                        {matchedChs.length} channels matched · {src.entryCount} EPG entries
-                      </p>
+                    <div className="dash__source-title-row">
+                      <span className="dash__src-dot" style={{ background: color }} />
+                      <div>
+                        <h3 className="dash__source-name">{src.name}</h3>
+                        <p className="dash__source-meta">
+                          {matchedChs.length} channels matched · {src.entryCount} EPG entries
+                        </p>
+                      </div>
                     </div>
                     <span className="dash__status-badge dash__status-badge--active">
                       Active
                     </span>
                   </div>
-                  {/* Show which channels this source covers */}
                   {matchedChs.length > 0 && (
                     <div className="dash__matched-chips">
                       {matchedChs.slice(0, 8).map((ch) => (
                         <span key={ch.id} className="dash__chip" title={`EPG: ${src.name}`}>
+                          <span className="dash__chip-dot" style={{ background: color }} />
                           {ch.name}
                         </span>
                       ))}
@@ -541,6 +547,9 @@ export default function DashboardPage() {
           gap: 12px;
           margin-bottom: 12px;
         }
+        .dash__source-title-row { display: flex; align-items: center; gap: 10px; }
+        .dash__src-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 6px rgba(255,255,255,0.1); }
+        .dash__chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; display: inline-block; vertical-align: middle; margin-right: 4px; }
         .dash__source-name {
           font-size: 16px;
           font-weight: 600;

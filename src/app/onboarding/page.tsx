@@ -35,7 +35,6 @@ export default function OnboardingPage() {
   };
 
   const handleAiNext = async () => {
-    // Save preferences via API
     try {
       const token = sessionStorage.getItem("easyepg_token");
       if (token) {
@@ -46,176 +45,191 @@ export default function OnboardingPage() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            language,
-            region,
-            aiThreshold: 0.75,
-            aiAutoApply,
+            language, region,
+            aiThreshold: 0.75, aiAutoApply,
           }),
         });
       }
-    } catch {
-      // Silent fail — non-critical
-    }
+    } catch { /* silent */ }
     setStep("ready");
   };
 
-  const handleFinish = () => {
-    router.push("/dashboard");
-  };
+  const handleFinish = () => router.push("/dashboard");
 
   return (
-    <main className="min-h-screen bg-white flex items-center justify-center px-6">
-      <div className="w-full max-w-[480px]">
-        {/* Step indicator */}
-        <div className="flex justify-center gap-2 mb-8">
-          {(["language", "ai-prefs", "ready"] as Step[]).map((s) => (
-            <div
-              key={s}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                step === s
-                  ? "w-8 bg-[#2563EB]"
-                  : s === "language" || s === "ai-prefs"
-                  ? "w-2 bg-[#2563EB]"
-                  : "w-2 bg-[#E5E7EB]"
-              }`}
-            />
-          ))}
-        </div>
-
-        {/* ─── Step 1: Language & Region ─── */}
-        {step === "language" && (
-          <section>
-            <h1 className="text-[32px] font-bold text-[#1A1A1A] mb-2">
-              Let&apos;s set up your EPG
-            </h1>
-            <p className="text-[16px] text-[#5F6368] mb-6">
-              Language = channel names and EPG descriptions.
-              Region = which channels appear first.
-            </p>
-
-            <label className="text-[14px] font-semibold text-[#1A1A1A] block mb-2">
-              What language do you prefer?
-            </label>
-            <div className="flex flex-wrap gap-2 mb-6">
-              {LANGUAGES.map((l) => (
-                <button
-                  key={l.code}
-                  onClick={() => setLanguage(l.code)}
-                  className={`min-h-[56px] px-6 rounded-[12px] text-[16px] font-medium border-2 transition-all ${
-                    language === l.code
-                      ? "border-[#2563EB] bg-[#EFF6FF] text-[#2563EB]"
-                      : "border-[#E5E7EB] bg-[#F8F9FA] text-[#1A1A1A]"
-                  }`}
-                  aria-pressed={language === l.code}
-                >
-                  {l.label}
-                </button>
-              ))}
-            </div>
-
-            <label className="text-[14px] font-semibold text-[#1A1A1A] block mb-2">
-              Where are you located?
-            </label>
-            <div className="flex flex-wrap gap-2 mb-8">
-              {REGIONS.map((r) => (
-                <button
-                  key={r.code}
-                  onClick={() => setRegion(r.code)}
-                  className={`min-h-[56px] px-6 rounded-[12px] text-[16px] font-medium border-2 transition-all ${
-                    region === r.code
-                      ? "border-[#2563EB] bg-[#EFF6FF] text-[#2563EB]"
-                      : "border-[#E5E7EB] bg-[#F8F9FA] text-[#1A1A1A]"
-                  }`}
-                  aria-pressed={region === r.code}
-                >
-                  {r.label}
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={handleLanguageNext}
-              className="btn btn--primary btn--full"
-              aria-label="Continue"
-            >
-              Continue
-            </button>
-          </section>
-        )}
-
-        {/* ─── Step 2: AI Preferences ─── */}
-        {step === "ai-prefs" && (
-          <section>
-            <h1 className="text-[32px] font-bold text-[#1A1A1A] mb-2">
-              AI Assistance
-            </h1>
-            <p className="text-[16px] text-[#5F6368] mb-8">
-              EasyEPG can automatically apply channel suggestions when it&apos;s
-              confident enough. You can change this later.
-            </p>
-
-            <div className="card p-6 mb-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[18px] font-semibold text-[#1A1A1A]">
-                    🤖 Auto-apply suggestions
-                  </p>
-                  <p className="text-[14px] text-[#5F6368] mt-1">
-                    Above 75% confidence
-                  </p>
-                </div>
-                <button
-                  onClick={() => setAiAutoApply(!aiAutoApply)}
-                  className={`relative w-[60px] h-[32px] rounded-full transition-colors ${
-                    aiAutoApply ? "bg-[#2563EB]" : "bg-[#E5E7EB]"
-                  }`}
-                  role="switch"
-                  aria-checked={aiAutoApply}
-                  aria-label="Auto-apply AI suggestions"
-                >
-                  <span
-                    className={`absolute top-[2px] left-[2px] w-[28px] h-[28px] rounded-full bg-white shadow transition-transform ${
-                      aiAutoApply ? "translate-x-[28px]" : ""
-                    }`}
-                  />
-                </button>
-              </div>
-              <p className="text-[13px] text-[#9AA0A6] mt-4">
-                Below-threshold suggestions will still appear for manual review.
-              </p>
-            </div>
-
-            <button
-              onClick={handleAiNext}
-              className="btn btn--primary btn--full"
-              aria-label="Let's go"
-            >
-              Let&apos;s go →
-            </button>
-          </section>
-        )}
-
-        {/* ─── Step 3: Ready ─── */}
-        {step === "ready" && (
-          <section className="text-center">
-            <div className="text-[64px] mb-4">✅</div>
-            <h1 className="text-[32px] font-bold text-[#1A1A1A] mb-2">
-              You&apos;re all set!
-            </h1>
-            <p className="text-[18px] text-[#5F6368] mb-8">
-              Taking you to your dashboard…
-            </p>
-
-            <button
-              onClick={handleFinish}
-              className="btn btn--primary btn--full"
-              aria-label="Go to dashboard"
-            >
-              Go to Dashboard
-            </button>
-          </section>
-        )}
+    <main className="onb">
+      {/* ─── Step indicator ─── */}
+      <div className="onb__steps">
+        {(["language", "ai-prefs", "ready"] as Step[]).map((s) => (
+          <div key={s} className={`onb__step ${step === s ? "onb__step--active" : ""}`} />
+        ))}
       </div>
+
+      {/* ─── Step 1: Language & Region ─── */}
+      {step === "language" && (
+        <section className="onb__content">
+          <h1 className="onb__title">Let&apos;s set up your EPG</h1>
+          <p className="onb__sub">
+            Language = channel names and EPG descriptions.
+            Region = which channels appear first.
+          </p>
+
+          <p className="onb__label">What language do you prefer?</p>
+          <div className="onb__grid">
+            {LANGUAGES.map((l) => (
+              <button
+                key={l.code}
+                onClick={() => setLanguage(l.code)}
+                className={`onb__pill ${language === l.code ? "onb__pill--active" : ""}`}
+                aria-pressed={language === l.code}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+
+          <p className="onb__label">Where are you located?</p>
+          <div className="onb__grid">
+            {REGIONS.map((r) => (
+              <button
+                key={r.code}
+                onClick={() => setRegion(r.code)}
+                className={`onb__pill ${region === r.code ? "onb__pill--active" : ""}`}
+                aria-pressed={region === r.code}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+
+          <button onClick={handleLanguageNext} className="onb__btn onb__btn--primary onb__btn--full">
+            Continue
+          </button>
+        </section>
+      )}
+
+      {/* ─── Step 2: AI Preferences ─── */}
+      {step === "ai-prefs" && (
+        <section className="onb__content">
+          <h1 className="onb__title">AI Assistance</h1>
+          <p className="onb__sub">
+            EasyEPG can automatically apply channel suggestions when it&apos;s
+            confident enough. You can change this later.
+          </p>
+
+          <div className="onb__card">
+            <div className="onb__toggle-row">
+              <div>
+                <p className="onb__toggle-title">🤖 Auto-apply suggestions</p>
+                <p className="onb__toggle-sub">Above 75% confidence</p>
+              </div>
+              <button
+                onClick={() => setAiAutoApply(!aiAutoApply)}
+                className={`onb__switch ${aiAutoApply ? "onb__switch--on" : ""}`}
+                role="switch"
+                aria-checked={aiAutoApply}
+                aria-label="Auto-apply AI suggestions"
+              >
+                <span className="onb__switch-knob" />
+              </button>
+            </div>
+            <p className="onb__hint">
+              Below-threshold suggestions will still appear for manual review.
+            </p>
+          </div>
+
+          <button onClick={handleAiNext} className="onb__btn onb__btn--primary onb__btn--full">
+            Let&apos;s go →
+          </button>
+        </section>
+      )}
+
+      {/* ─── Step 3: Ready ─── */}
+      {step === "ready" && (
+        <section className="onb__content onb__content--center">
+          <div className="onb__check">✅</div>
+          <h1 className="onb__title">You&apos;re all set!</h1>
+          <p className="onb__sub">Taking you to your dashboard…</p>
+          <button onClick={handleFinish} className="onb__btn onb__btn--primary onb__btn--full">
+            Go to Dashboard
+          </button>
+        </section>
+      )}
+
+      {/* ─── Styles ─── */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        .onb {
+          background: #0C0C0D;
+          min-height: 100vh;
+          color: #E4E4E7;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          display: flex; flex-direction: column; align-items: center;
+          justify-content: center; padding: 24px 16px;
+        }
+        .onb__steps { display: flex; gap: 8px; margin-bottom: 40px; }
+        .onb__step {
+          width: 8px; height: 8px; border-radius: 50%;
+          background: rgba(255,255,255,0.1);
+          transition: all 300ms ease;
+        }
+        .onb__step--active {
+          width: 36px; border-radius: 4px;
+          background: #D2FF00;
+        }
+        .onb__content {
+          width: 100%; max-width: 480px;
+          display: flex; flex-direction: column; gap: 16px;
+        }
+        .onb__content--center { align-items: center; text-align: center; }
+        .onb__title { font-size: 28px; font-weight: 700; color: #FFFFFF; margin: 0; }
+        .onb__sub { font-size: 15px; color: rgba(255,255,255,0.35); margin: 0; line-height: 1.5; }
+        .onb__label { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.5); margin: 8px 0 0; }
+        .onb__grid { display: flex; flex-wrap: wrap; gap: 8px; }
+        .onb__pill {
+          min-height: 48px; padding: 0 20px; border-radius: 12px;
+          font-size: 15px; font-weight: 500; border: 1.5px solid rgba(255,255,255,0.08);
+          background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.5);
+          cursor: pointer; transition: all 150ms ease;
+        }
+        .onb__pill:hover { border-color: rgba(255,255,255,0.15); color: #E4E4E7; }
+        .onb__pill--active {
+          border-color: #D2FF00; background: rgba(210,255,0,0.08);
+          color: #D2FF00;
+        }
+        .onb__btn {
+          display: inline-flex; align-items: center; justify-content: center;
+          min-height: 52px; padding: 0 24px; border-radius: 14px;
+          font-size: 17px; font-weight: 600; border: none; cursor: pointer;
+          text-decoration: none; transition: all 150ms ease;
+          margin-top: 8px; line-height: 1;
+        }
+        .onb__btn:active { transform: scale(0.97); }
+        .onb__btn--primary { background: #D2FF00; color: #0C0C0D; }
+        .onb__btn--primary:hover { background: #BCE600; }
+        .onb__btn--full { width: 100%; }
+        .onb__card {
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 16px; padding: 20px;
+        }
+        .onb__toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+        .onb__toggle-title { font-size: 16px; font-weight: 600; color: #E4E4E7; margin: 0; }
+        .onb__toggle-sub { font-size: 13px; color: rgba(255,255,255,0.3); margin: 2px 0 0; }
+        .onb__switch {
+          flex-shrink: 0; width: 52px; height: 28px; border-radius: 14px;
+          border: none; background: rgba(255,255,255,0.1); cursor: pointer;
+          position: relative; transition: background 200ms ease; padding: 0;
+        }
+        .onb__switch--on { background: #D2FF00; }
+        .onb__switch-knob {
+          position: absolute; top: 3px; left: 3px;
+          width: 22px; height: 22px; border-radius: 50%;
+          background: #0C0C0D; transition: transform 200ms ease;
+        }
+        .onb__switch--on .onb__switch-knob { transform: translateX(24px); background: #0C0C0D; }
+        .onb__hint { font-size: 13px; color: rgba(255,255,255,0.25); margin: 12px 0 0; }
+        .onb__check { font-size: 56px; line-height: 1; margin-bottom: 8px; }
+      ` }} />
     </main>
   );
 }

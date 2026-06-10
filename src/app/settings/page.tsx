@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
+const EPG_COLORS = ['#D2FF00','#FF6B9D','#5BC0EB','#00C9A7','#FFD166','#FF8C42','#C084FC','#F472B6'];
+
 interface EpgSource {
   id: string;
   name: string;
@@ -159,12 +161,17 @@ export default function SettingsPage() {
         )}
 
         <div className="set__src-list">
-          {sources.map((src) => (
-            <div key={src.id} className="set__card">
+          {sources.map((src, idx) => {
+            const color = EPG_COLORS[idx % EPG_COLORS.length];
+            return (
+            <div key={src.id} className="set__card" style={{ borderLeftColor: color, borderLeftWidth: 3, borderLeftStyle: 'solid' }}>
               <div className="set__src-head">
-                <div>
-                  <h3 className="set__card-title">{src.name}</h3>
-                  <p className="set__src-url">{src.url}</p>
+                <div className="set__src-title-row">
+                  <span className="set__src-dot" style={{ background: color }} />
+                  <div>
+                    <h3 className="set__card-title">{src.name}</h3>
+                    <p className="set__src-url">{src.url}</p>
+                  </div>
                 </div>
                 <div className="set__src-actions">
                   <span className={`set__badge set__badge--${src.status}`}>
@@ -180,7 +187,10 @@ export default function SettingsPage() {
                   <p className="set__src-meta">{src.channelCount} channels · {src.entryCount} entries</p>
                   <div className="set__chip-row">
                     {src.channels.slice(0, 8).map((ch) => (
-                      <span key={ch.tvgId} className="set__chip">{ch.displayName}</span>
+                      <span key={ch.tvgId} className="set__chip">
+                        <span className="set__chip-dot" style={{ background: color }} />
+                        {ch.displayName}
+                      </span>
                     ))}
                     {src.channels.length > 8 && <span className="set__chip-more">+{src.channels.length - 8}</span>}
                   </div>
@@ -192,7 +202,7 @@ export default function SettingsPage() {
                 </div>
               )}
             </div>
-          ))}
+          );})}
         </div>
 
         {loadedSrcs.length > 0 && (
@@ -330,6 +340,9 @@ export default function SettingsPage() {
           display: flex; flex-direction: column; align-items: center;
           text-align: center; padding: 32px 20px;
         }
+        .set__src-title-row { display: flex; align-items: center; gap: 10px; }
+        .set__src-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 6px rgba(255,255,255,0.1); }
+        .set__chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; display: inline-block; vertical-align: middle; margin-right: 4px; }
         .set__card-title {
           font-size: 16px; font-weight: 600; color: #FFFFFF;
           margin: 0 0 4px;
