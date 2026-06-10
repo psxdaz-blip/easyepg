@@ -301,9 +301,7 @@ export default function DashboardPage() {
           min-height: 100vh;
           color: #E4E4E7;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-          padding: 16px 12px 100px;
-          max-width: 680px;
-          margin: 0 auto;
+          padding: 20px 24px 100px;
         }
 
         /* ─── Top bar ─── */
@@ -393,7 +391,7 @@ export default function DashboardPage() {
         }
 
         /* ─── Section ─── */
-        .dash__section { margin-bottom: 20px; }
+        .dash__section { margin-bottom: 20px; max-width: 960px; }
         .dash__section-header {
           display: flex;
           align-items: center;
@@ -539,7 +537,7 @@ export default function DashboardPage() {
         }
 
         /* ─── EPG Sources ─── */
-        .dash__sources { display: flex; flex-direction: column; gap: 10px; }
+        .dash__sources { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 10px; }
         .dash__source-head {
           display: flex;
           justify-content: space-between;
@@ -595,7 +593,7 @@ export default function DashboardPage() {
         /* ─── Quick actions ─── */
         .dash__actions {
           display: grid;
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
           gap: 8px;
         }
         .dash__action-card {
