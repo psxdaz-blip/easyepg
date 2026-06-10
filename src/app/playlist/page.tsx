@@ -14,6 +14,7 @@ import {
   mockMyChannels,
   mockAiConfidenceMap,
 } from "@/lib/mock-data";
+import { getEpgSchedule } from "@/lib/epg-store";
 
 interface Playlist {
   id: string;
@@ -99,10 +100,56 @@ export default function PlaylistPage() {
     return map;
   }, [sources, epgOverrides]);
 
+  // Multi-playlist management
+  const [playlists, setPlaylists] = useState<Playlist[]>([
+    { id: "pl_default", name: "My Playlist", channelIds: mockMyChannels.map((c) => c.id), color: '#D2FF00', customCategories: [], categoryOverrides: {} },
+  ]);
+  const [activePlaylistId, setActivePlaylistId] = useState("pl_default");
+
+  const activePlaylist = playlists.find((p) => p.id === activePlaylistId) || playlists[0];
+
+  // Compute enriched channels with real EPG schedule
+  const { enrichedMasterChannels, enrichedActiveChannels } = useMemo(() => {
+    const now = new Date();
+
+    const enrich = (ch: typeof mockMasterChannels[number]) => {
+      const tvgId = ch.tvgId || ch.id;
+      const entries = getEpgSchedule(tvgId);
+      // Find current program
+      const current = entries.find((e) => {
+        const start = new Date(e.start);
+        const stop = new Date(e.stop);
+        return now >= start && now < stop;
+      });
+      // Find next program
+      const upcoming = entries
+        .filter((e) => new Date(e.start) > now)
+        .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+      const prog = upcoming[0] || current;
+      return {
+        ...ch,
+        nextProgram: prog
+          ? { title: prog.title, startTime: prog.start }
+          : null,
+      };
+    };
+
+    return {
+      enrichedMasterChannels: mockMasterChannels.map(enrich),
+      enrichedActiveChannels: activePlaylist.channelIds
+        .map((id) => mockMasterChannels.find((c) => c.id === id))
+        .filter((c): c is typeof mockMasterChannels[number] => c != null)
+        .map((c) => {
+          const override = activePlaylist.categoryOverrides?.[c.id];
+          const enriched = enrich(c);
+          return override ? { ...enriched, groupTitle: override, group: override } : enriched;
+        }),
+    };
+  }, [sources, activePlaylist]);
+
   const handleEpgSourceClick = useCallback((channelId: string) => {
     const loaded = sources.filter((s) => s.status === "loaded");
-    if (loaded.length <= 1) return; // nothing to switch to
-    // Cycle to next source
+    if (loaded.length <= 1) return;
     const current = epgOverrides[channelId];
     const currentIdx = loaded.findIndex((s) => s.id === current);
     const nextIdx = (currentIdx + 1) % loaded.length;
@@ -111,21 +158,6 @@ export default function PlaylistPage() {
     const ch = mockMasterChannels.find((c) => c.id === channelId);
     showToast(`📡 ${ch?.name || 'Channel'} → ${next.name}`);
   }, [sources, epgOverrides]);
-
-  // Multi-playlist management
-  const [playlists, setPlaylists] = useState<Playlist[]>([
-    { id: "pl_default", name: "My Playlist", channelIds: mockMyChannels.map((c) => c.id), color: '#D2FF00', customCategories: [], categoryOverrides: {} },
-  ]);
-  const [activePlaylistId, setActivePlaylistId] = useState("pl_default");
-
-  const activePlaylist = playlists.find((p) => p.id === activePlaylistId) || playlists[0];
-  const activeChannels = activePlaylist.channelIds
-    .map((id) => mockMasterChannels.find((c) => c.id === id))
-    .filter((c): c is typeof mockMasterChannels[number] => c != null)
-    .map((c) => {
-      const override = activePlaylist.categoryOverrides?.[c.id];
-      return override ? { ...c, groupTitle: override, group: override } : c;
-    });
 
   const allCategories = useMemo(() => {
     const cats = new Set<string>();
@@ -145,7 +177,7 @@ export default function PlaylistPage() {
     id: p.id,
     name: p.name,
     color: p.color,
-    channels: mockMasterChannels.filter((c) => p.channelIds.includes(c.id)),
+    channels: enrichedMasterChannels.filter((c) => p.channelIds.includes(c.id)),
   }));
 
   const handleNewPlaylist = (name: string) => {
@@ -298,7 +330,7 @@ export default function PlaylistPage() {
       {/* Content */}
       {viewMode === "master" ? (
         <MasterPlaylistView
-          channels={mockMasterChannels}
+          channels={enrichedMasterChannels}
           aiSuggestionsCount={3}
           aiConfidenceMap={mockAiConfidenceMap}
           onSave={() => showToast("✅ Playlist saved")}
@@ -312,8 +344,8 @@ export default function PlaylistPage() {
         />
       ) : (
         <PersonalPlaylistView
-          masterChannels={mockMasterChannels}
-          myChannels={activeChannels}
+          masterChannels={enrichedMasterChannels}
+          myChannels={enrichedActiveChannels}
           activePlaylistName={activePlaylist.name}
           activePlaylistColor={activePlaylist.color}
           playlistCategories={activePlaylist.customCategories || []}

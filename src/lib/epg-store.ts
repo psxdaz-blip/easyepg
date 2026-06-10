@@ -190,3 +190,12 @@ class EpgStore {
 }
 
 export const epgStore = new EpgStore();
+
+/** Direct access to EPG entries for client-side schedule lookup */
+export function getEpgSchedule(tvgId: string): EpgEntry[] {
+  return EPG_ENTRIES.filter((e) => e.tvgId === tvgId);
+}
+
+export function getAllEpgEntries(): EpgEntry[] {
+  return EPG_ENTRIES;
+}
