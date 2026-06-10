@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect } from "react";
+import Link from "next/link";
 import Header from "@/components/Header";
 import NewPlaylistModal from "@/components/NewPlaylistModal";
 import NewCategoryModal from "@/components/NewCategoryModal";
@@ -36,6 +37,13 @@ interface EpgSourceData {
   channels?: Array<{ tvgId: string; displayName: string }>;
 }
 
+interface SourcePlaylist {
+  id: string;
+  name: string;
+  url: string;
+  channelCount: number;
+}
+
 const EPG_COLORS = ['#D2FF00','#FF6B9D','#5BC0EB','#00C9A7','#FFD166','#FF8C42','#C084FC','#F472B6'];
 const PLAYLIST_COLORS = [
   '#D2FF00', '#FF6B9D', '#5BC0EB', '#00C9A7',
@@ -54,6 +62,10 @@ export default function PlaylistPage() {
   const [copyCategoriesModalOpen, setCopyCategoriesModalOpen] = useState(false);
   const [pendingAssignIds, setPendingAssignIds] = useState<string[]>([]);
   const [sources, setSources] = useState<EpgSourceData[]>([]);
+  const [sourcePlaylists, setSourcePlaylists] = useState<SourcePlaylist[]>([]);
+  const [mergeModalOpen, setMergeModalOpen] = useState(false);
+  const [selectedSrcIds, setSelectedSrcIds] = useState<Set<string>>(new Set());
+  const [activeSourceId, setActiveSourceId] = useState<string | null>(null);
   /** channelId → sourceId override for EPG source */
   const [epgOverrides, setEpgOverrides] = useState<Record<string, string>>({});
 
@@ -70,6 +82,31 @@ export default function PlaylistPage() {
     const interval = setInterval(load, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  // Load source playlists from localStorage (set by /setup)
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("easyepg_source_playlists");
+      if (saved) setSourcePlaylists(JSON.parse(saved));
+    } catch {}
+  }, []);
+
+  // Compute merged master channels from selected source playlists
+  const mergedMasterChannels = useMemo(() => {
+    const allIds = new Set<string>();
+    const result: typeof mockMasterChannels = [];
+    sourcePlaylists.forEach((sp) => {
+      // For now, use mockMasterChannels as the source pool
+      // In production, each source playlist would have its own channel list
+      mockMasterChannels.forEach((ch) => {
+        if (!allIds.has(ch.id)) {
+          allIds.add(ch.id);
+          result.push(ch);
+        }
+      });
+    });
+    return result.length > 0 ? result : mockMasterChannels;
+  }, [sourcePlaylists]);
 
   // Compute EPG source map: channelId → { name, color }
   const epgSourceMap = useMemo(() => {
@@ -289,7 +326,7 @@ export default function PlaylistPage() {
           onClick={() => setViewMode("master")}
           aria-label="View Master Playlist"
         >
-          Master ({mockMasterChannels.length})
+          Master ({mergedMasterChannels.length})
         </button>
         {playlists.map((pl) => (
           <button
@@ -327,10 +364,41 @@ export default function PlaylistPage() {
         )}
       </div>
 
+      {/* Source playlist tabs */}
+      {sourcePlaylists.length > 0 && (
+        <div className="flex items-center gap-2 px-3 py-2 overflow-x-auto bg-[#F8F9FA] border-b border-[#E5E7EB]">
+          <span className="text-[12px] font-semibold text-[#9AA0A6] uppercase tracking-wide mr-1">Sources</span>
+          {sourcePlaylists.map((sp, idx) => (
+            <button
+              key={sp.id}
+              className={`whitespace-nowrap min-h-[34px] px-4 rounded-full text-[13px] font-medium border transition-all ${
+                activeSourceId === sp.id
+                  ? "bg-[#EFF6FF] text-[#2563EB] border-[#2563EB]"
+                  : "bg-white text-[#5F6368] border-[#E5E7EB]"
+              }`}
+              onClick={() => setActiveSourceId(activeSourceId === sp.id ? null : sp.id)}
+              style={{ borderLeftColor: EPG_COLORS[idx % EPG_COLORS.length], borderLeftWidth: 3 }}
+            >
+              <span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{ backgroundColor: EPG_COLORS[idx % EPG_COLORS.length] }} />
+              {sp.name} ({sp.channelCount})
+            </button>
+          ))}
+          <button
+            className="whitespace-nowrap min-h-[34px] px-4 rounded-full text-[13px] font-medium bg-[#D2FF00] text-[#111112] border-none"
+            onClick={() => setMergeModalOpen(true)}
+          >
+            + Merge
+          </button>
+          <Link href="/setup" className="whitespace-nowrap min-h-[34px] px-4 rounded-full text-[13px] font-medium text-[#2563EB] border border-[#E5E7EB] bg-white">
+            + Add
+          </Link>
+        </div>
+      )}
+
       {/* Content */}
       {viewMode === "master" ? (
         <MasterPlaylistView
-          channels={enrichedMasterChannels}
+          channels={activeSourceId ? enrichedMasterChannels.filter((c) => c.id.includes(activeSourceId)) : enrichedMasterChannels}
           aiSuggestionsCount={3}
           aiConfidenceMap={mockAiConfidenceMap}
           onSave={() => showToast("✅ Playlist saved")}
@@ -344,7 +412,7 @@ export default function PlaylistPage() {
         />
       ) : (
         <PersonalPlaylistView
-          masterChannels={enrichedMasterChannels}
+          masterChannels={activeSourceId ? enrichedMasterChannels.filter((c) => c.id.includes(activeSourceId)) : enrichedMasterChannels}
           myChannels={enrichedActiveChannels}
           activePlaylistName={activePlaylist.name}
           activePlaylistColor={activePlaylist.color}
@@ -433,6 +501,50 @@ export default function PlaylistPage() {
         categories={allCategories}
         onCopy={handleCopyByCategory}
       />
+
+      {/* ─── Merge Modal ─── */}
+      {mergeModalOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-6">
+          <div className="bg-white rounded-[16px] p-6 max-w-[400px] w-full shadow-xl">
+            <h2 className="text-[20px] font-bold text-[#1A1A1A] mb-1">Merge Source Playlists</h2>
+            <p className="text-[14px] text-[#5F6368] mb-4">Select which sources to combine into the master playlist.</p>
+            {sourcePlaylists.map((sp, idx) => (
+              <label key={sp.id} className="flex items-center gap-3 py-3 px-3 rounded-[10px] hover:bg-[#F8F9FA] cursor-pointer border-b border-[#E5E7EB] last:border-0">
+                <input
+                  type="checkbox"
+                  checked={selectedSrcIds.has(sp.id)}
+                  onChange={() => {
+                    const next = new Set(selectedSrcIds);
+                    next.has(sp.id) ? next.delete(sp.id) : next.add(sp.id);
+                    setSelectedSrcIds(next);
+                  }}
+                  className="w-5 h-5 accent-[#2563EB]"
+                />
+                <span className="w-3 h-3 rounded-full" style={{ background: EPG_COLORS[idx % EPG_COLORS.length] }} />
+                <div>
+                  <p className="text-[15px] font-medium text-[#1A1A1A]">{sp.name}</p>
+                  <p className="text-[12px] text-[#9AA0A6]">{sp.channelCount} channels</p>
+                </div>
+              </label>
+            ))}
+            <div className="flex gap-3 mt-4">
+              <button className="flex-1 min-h-[44px] rounded-[12px] bg-[#F8F9FA] text-[#5F6368] font-medium border-none cursor-pointer" onClick={() => setMergeModalOpen(false)}>
+                Cancel
+              </button>
+              <button
+                className="flex-1 min-h-[44px] rounded-[12px] bg-[#2563EB] text-white font-medium border-none cursor-pointer disabled:opacity-40"
+                disabled={selectedSrcIds.size === 0}
+                onClick={() => {
+                  showToast(`✅ ${selectedSrcIds.size} source${selectedSrcIds.size > 1 ? 's' : ''} merged into master`);
+                  setMergeModalOpen(false);
+                }}
+              >
+                Merge {selectedSrcIds.size > 0 ? `${selectedSrcIds.size}` : ''}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes slide-up {
