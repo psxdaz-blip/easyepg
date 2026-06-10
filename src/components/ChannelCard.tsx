@@ -38,8 +38,12 @@ export interface ChannelCardProps {
   onMenuOpen?: (channelId: string) => void;
   onDragStart?: (channelId: string) => void;
   onDragOver?: (e: React.DragEvent) => void;
+  onMoveUp?: (channelId: string) => void;
+  onMoveDown?: (channelId: string) => void;
   /** Set of ALL selected channel IDs (for multi-select drag) */
   selectedIds?: Set<string>;
+  /** Brief highlight flash after move */
+  moving?: boolean;
 }
 
 /* ─── Helpers ─── */
@@ -74,7 +78,10 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
   onMenuOpen,
   onDragStart,
   onDragOver,
+  onMoveUp,
+  onMoveDown,
   selectedIds,
+  moving,
 }) => {
   const [enabled, setEnabled] = useState(true);
   const cardId = useId();
@@ -112,6 +119,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
         ${selected ? 'channel-card--selected' : ''}
         ${inMyPlaylist ? 'channel-card--mine' : ''}
         ${enabled ? '' : 'channel-card--disabled'}
+        ${moving ? 'channel-card--moving' : ''}
       `}
       role={selectable ? "option" : "listitem"}
       aria-label={`${channel.name}${channel.nextProgram ? `, next: ${channel.nextProgram.title} at ${formatTime(channel.nextProgram.startTime)}` : ''}`}
@@ -189,6 +197,32 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
         </div>
       )}
 
+      {/* Move up/down buttons (only in playlist) */}
+      {inMyPlaylist && (
+        <div className="channel-card__move-group">
+          <button
+            className="channel-card__move-btn"
+            onClick={() => onMoveUp?.(channel.id)}
+            aria-label={`Move ${channel.name} up`}
+            tabIndex={0}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="var(--text-secondary)" aria-hidden="true">
+              <path d="M8 3l6 6H2z" />
+            </svg>
+          </button>
+          <button
+            className="channel-card__move-btn"
+            onClick={() => onMoveDown?.(channel.id)}
+            aria-label={`Move ${channel.name} down`}
+            tabIndex={0}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="var(--text-secondary)" aria-hidden="true">
+              <path d="M8 13l-6-6h12z" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* Overflow menu */}
       <button
         className="channel-card__menu"
@@ -238,6 +272,13 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
         }
         .channel-card--disabled {
           opacity: 0.45;
+        }
+        .channel-card--moving {
+          animation: channel-move-flash 400ms ease-out;
+        }
+        @keyframes channel-move-flash {
+          0% { background: var(--accent-soft, #EFF6FF); outline: 2px solid var(--accent, #2563EB); outline-offset: -2px; }
+          100% { background: var(--bg-card, #F8F9FA); outline-color: transparent; }
         }
         .channel-card__drag {
           display: flex;
@@ -336,6 +377,34 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
           cursor: pointer;
         }
         .channel-card__menu:focus-visible {
+          outline: 3px solid var(--focus-ring, #2563EB);
+          outline-offset: 2px;
+        }
+        .channel-card__move-group {
+          flex-shrink: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 1px;
+        }
+        .channel-card__move-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 28px;
+          background: none;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: background 120ms ease;
+        }
+        .channel-card__move-btn:hover {
+          background: var(--bg-hover, #F0F1F3);
+        }
+        .channel-card__move-btn:active {
+          background: var(--border, #E5E7EB);
+        }
+        .channel-card__move-btn:focus-visible {
           outline: 3px solid var(--focus-ring, #2563EB);
           outline-offset: 2px;
         }

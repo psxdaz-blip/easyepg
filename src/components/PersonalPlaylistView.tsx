@@ -102,6 +102,8 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [menuSide, setMenuSide] = useState<'master' | 'mine'>('master');
   const [catOrder, setCatOrder] = useState<Record<string, string[]>>({});
+  const [dragOverPlaylist, setDragOverPlaylist] = useState(false);
+  const [movingId, setMovingId] = useState<string | null>(null);
   const lastClickedRef = useRef<number>(-1);
   const catScrollRef = useRef<HTMLDivElement>(null);
   const playlistCatScrollRef = useRef<HTMLDivElement>(null);
@@ -214,13 +216,28 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
     }
   };
 
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOverPlaylist(true);
+  };
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
   };
 
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only hide when leaving the pane, not entering a child
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const x = e.clientX, y = e.clientY;
+    if (x <= rect.left || x >= rect.right || y <= rect.top || y >= rect.bottom) {
+      setDragOverPlaylist(false);
+    }
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    setDragOverPlaylist(false);
     const rawData = e.dataTransfer.getData('text/plain');
     if (!rawData) return;
 
@@ -249,6 +266,32 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
     // Copy from master into selected category
     const targetCat = playlistCategory !== 'All' ? playlistCategory : undefined;
     onCopyFromMaster('all', [channelId], targetCat);
+  };
+
+  const handleMoveUp = (channelId: string) => {
+    if (!onReorderPlaylist) return;
+    const ids = myChannels.map((c) => c.id);
+    const idx = ids.indexOf(channelId);
+    if (idx > 0) {
+      ids.splice(idx, 1);
+      ids.splice(idx - 1, 0, channelId);
+      onReorderPlaylist(ids);
+      setMovingId(channelId);
+      setTimeout(() => setMovingId(null), 400);
+    }
+  };
+
+  const handleMoveDown = (channelId: string) => {
+    if (!onReorderPlaylist) return;
+    const ids = myChannels.map((c) => c.id);
+    const idx = ids.indexOf(channelId);
+    if (idx >= 0 && idx < ids.length - 1) {
+      ids.splice(idx, 1);
+      ids.splice(idx + 1, 0, channelId);
+      onReorderPlaylist(ids);
+      setMovingId(channelId);
+      setTimeout(() => setMovingId(null), 400);
+    }
   };
 
   const handleSmartSuggest = () => {
@@ -311,8 +354,10 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
 
     return (
     <div
-      className={`two-pane__pane two-pane__pane--${side}`}
+      className={`two-pane__pane two-pane__pane--${side}${side === 'mine' && dragOverPlaylist ? ' two-pane__pane--drop-target' : ''}`}
+      onDragEnter={side === 'mine' ? handleDragEnter : undefined}
       onDragOver={side === 'mine' ? handleDragOver : undefined}
+      onDragLeave={side === 'mine' ? handleDragLeave : undefined}
       onDrop={side === 'mine' ? handleDrop : undefined}
     >
       <h2 className="two-pane__pane-title">
@@ -352,6 +397,7 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
 
       <div className="two-pane__pane-list" role="list" aria-label={`${title} channels`}
         onDragOver={side === 'mine' ? handleDragOver : undefined}
+        onDragLeave={side === 'mine' ? handleDragLeave : undefined}
         onDrop={side === 'mine' ? handleDrop : undefined}
       >
         {side === 'mine' && activeCat === 'All' ? (
@@ -370,6 +416,8 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
                       onToggle={onToggleChannel}
                       onMenuOpen={(id) => handleMenuOpen(id, 'mine')}
                       onDragOver={handleDragOver}
+                      onMoveUp={handleMoveUp}
+                      onMoveDown={handleMoveDown}
                     />
                   ))}
                 </div>
@@ -387,6 +435,8 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
                       inMyPlaylist={true}
                       onToggle={onToggleChannel}
                       onMenuOpen={(id) => handleMenuOpen(id, 'mine')}
+                      onMoveUp={handleMoveUp}
+                      onMoveDown={handleMoveDown}
                     />
                   ))}
                 </div>
@@ -408,6 +458,9 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
               onSelect={side === 'master' ? handleSelectMaster : undefined}
               onToggle={onToggleChannel}
               onMenuOpen={(id) => handleMenuOpen(id, side)}
+              onMoveUp={side === 'mine' ? handleMoveUp : undefined}
+              onMoveDown={side === 'mine' ? handleMoveDown : undefined}
+              moving={side === 'mine' ? ch.id === movingId : undefined}
             />
           ))
         )}
@@ -616,6 +669,12 @@ const PersonalPlaylistView: React.FC<PersonalPlaylistViewProps> = ({
           padding: var(--card-padding, 20px);
           min-width: 0;
           overflow: hidden;
+          transition: box-shadow 200ms ease, outline 200ms ease;
+        }
+        .two-pane__pane--drop-target {
+          outline: 3px dashed var(--accent, #2563EB);
+          outline-offset: -3px;
+          box-shadow: 0 0 0 4px rgba(37,99,235,0.08), inset 0 0 0 1px rgba(37,99,235,0.06);
         }
         .two-pane__pane-title {
           font-size: var(--font-h2, 22px);
